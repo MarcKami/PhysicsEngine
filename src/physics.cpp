@@ -25,9 +25,9 @@ namespace Sphere {
 	extern float spherePos[3] = { 0.f, 1.f, 0.f };
 	extern float sphereRadius = 1.f;
 	extern float sphereColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f), float radius = 1.f);
+	extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f));
 	extern void cleanupSphere();
-	extern void updateSphere(glm::vec3 pos, float radius = 1.f);
+	extern void updateSphere(glm::vec3 pos);
 	extern void drawSphere();
 }
 
@@ -36,22 +36,23 @@ namespace Capsule {
 	extern float capsulePosA[3] = { -3.f, 2.f, -2.f }, capsulePosB[3] = { -4.f, 2.f, 2.f };
 	extern float capsuleRadius = 1.f;
 	extern float capsuleColor[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
-	extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f), float radius = 1.f);
+	extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f));
 	extern void cleanupCapsule();
-	extern void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius = 1.f);
+	extern void updateCapsule(glm::vec3 posA, glm::vec3 posB);
 	extern void drawCapsule();
 }
 
 namespace LilSpheres {
 	extern bool renderParticles = true;
 	extern int maxParticles = 1000;
+	extern float particlesRadius = .05f;
 	extern float lifetime = 3.f;
 	extern float bounceCoeficient = .0f, frictionCoeficient = .0f;
 	extern int solver = 0; //0 Euler - 1 Verlet
 	extern int form = 0; //0 Cascade - 1 Fountain
 	extern float particlesFocus[3] = { .0f, .0f, .0f };
 	extern float particlesColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
-	extern void setupParticles(int numTotalParticles, float radius = 0.05f);
+	extern void setupParticles(int numTotalParticles);
 	extern void cleanupParticles();
 	extern void updateParticles(int startIdx, int count, float* array_data);
 	extern void drawParticles(int startIdx, int count);
@@ -77,6 +78,8 @@ void GUI() {
 			//Max Particles
 			ImGui::SliderInt("Max Particles", &LilSpheres::maxParticles, 1000, 10000);
 			ImGui::SameLine(); ShowHelpMarker("CTRL+click to input value.");
+			//Radius
+			ImGui::SliderFloat("Particles Radius", &LilSpheres::particlesRadius, .01f, .25f, "%.3f");
 			//Particles Focus Position
 			ImGui::SliderFloatPos("Focus Position", LilSpheres::particlesFocus, -10.0f, 10.0f);
 			//Particles Lifetime
@@ -100,9 +103,9 @@ void GUI() {
 			//Enable Sphere
 			ImGui::Checkbox("Sphere Enabled", &Sphere::renderSphere);
 			//Position
-			ImGui::SliderFloatPos("Position", Sphere::spherePos, -10.0f, 10.0f);
+			ImGui::SliderFloatPos("Sphere Position", Sphere::spherePos, -10.0f, 10.0f);
 			//Radius
-			ImGui::SliderFloat("Radius", &Sphere::sphereRadius, .1f, 5.0f, "%.3f");
+			ImGui::SliderFloat("Sphere Radius", &Sphere::sphereRadius, .1f, 5.0f, "%.3f");
 			//Color
 			ImGui::ColorEdit4("Sphere Color", Sphere::sphereColor);
 		}
@@ -116,7 +119,7 @@ void GUI() {
 			//Position point 2
 			ImGui::SliderFloatPos("Position B", Capsule::capsulePosB, -10.0f, 10.0f);
 			//Radius
-			ImGui::SliderFloat("Radius", &Capsule::capsuleRadius, .1f, 5.0f, "%.3f");
+			ImGui::SliderFloat("Capsule Radius", &Capsule::capsuleRadius, .1f, 2.5f, "%.3f");
 			//Color
 			ImGui::ColorEdit4("Capsule Color", Capsule::capsuleColor);
 		}
@@ -126,7 +129,7 @@ void GUI() {
 			//Enable Force Field
 			ImGui::Checkbox("Force Field Enabled", &ForceField::enableForce);
 			//Position
-			ImGui::SliderFloatPos("Position", ForceField::forceFocus, -10.0f, 10.0f);
+			ImGui::SliderFloatPos("Force Field Position", ForceField::forceFocus, -10.0f, 10.0f);
 			//Force
 			ImGui::SliderFloat("Force", &ForceField::force, .1f, 10.0f, "%.3f");
 			//Interaction Type ( Repulsion, Atraction, Pulse)

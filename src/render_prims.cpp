@@ -8,25 +8,26 @@
 namespace Sphere {
 extern bool renderSphere;
 extern float sphereRadius;
-extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f), float radius = 1.f);
+extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f));
 extern void cleanupSphere();
-extern void updateSphere(glm::vec3 pos, float radius = 1.f);
+extern void updateSphere(glm::vec3 pos);
 extern void drawSphere();
 }
 
 namespace Capsule {
 extern bool renderCapsule;
 extern float capsuleRadius;
-extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f), float radius = 1.f);
+extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f));
 extern void cleanupCapsule();
-extern void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius = 1.f);
+extern void updateCapsule(glm::vec3 posA, glm::vec3 posB);
 extern void drawCapsule();
 }
 
 namespace LilSpheres {
 extern bool renderParticles;
 extern int maxParticles;
-extern void setupParticles(int numTotalParticles, float radius = 0.05f);
+extern float particlesRadius;
+extern void setupParticles(int numTotalParticles);
 extern void cleanupParticles();
 extern void updateParticles(int startIdx, int count, float* array_data);
 extern void drawParticles(int startIdx, int count);

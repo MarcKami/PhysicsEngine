@@ -351,7 +351,7 @@ GLuint sphereVao;
 GLuint sphereVbo;
 GLuint sphereShaders[3];
 GLuint sphereProgram;
-float radius;
+extern float sphereRadius;
 extern float sphereColor[4];
 
 const char* sphere_vertShader =
@@ -434,8 +434,7 @@ void cleanupSphereShaderAndProgram() {
 	shadersCreated = false;
 }
 
-void setupSphere(glm::vec3 pos, float radius) {
-	Sphere::radius = radius;
+void setupSphere(glm::vec3 pos) {
 	glGenVertexArrays(1, &sphereVao);
 	glBindVertexArray(sphereVao);
 	glGenBuffers(1, &sphereVbo);
@@ -456,7 +455,7 @@ void cleanupSphere() {
 
 	cleanupSphereShaderAndProgram();
 }
-void updateSphere(glm::vec3 pos, float radius) {
+void updateSphere(glm::vec3 pos) {
 	glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
 	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 	buff[0] = pos.x;
@@ -464,7 +463,6 @@ void updateSphere(glm::vec3 pos, float radius) {
 	buff[2] = pos.z;
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	Sphere::radius = radius;
 }
 void drawSphere() {
 	glBindVertexArray(sphereVao);
@@ -473,7 +471,7 @@ void drawSphere() {
 	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(_modelView));
 	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
 	glUniform4f(glGetUniformLocation(sphereProgram, "color"), sphereColor[0], sphereColor[1], sphereColor[2], sphereColor[3]);
-	glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
+	glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::sphereRadius);
 	glDrawArrays(GL_POINTS, 0, 1);
 
 	glUseProgram(0);
@@ -487,7 +485,7 @@ GLuint capsuleVao;
 GLuint capsuleVbo[2];
 GLuint capsuleShader[3];
 GLuint capsuleProgram;
-float radius;
+extern float capsuleRadius;
 extern float capsuleColor[4];
 
 const char* capsule_vertShader =
@@ -589,8 +587,7 @@ void main() {\n\
 	out_Color = vec4(color.xyz * dot(normal, (mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)).xyz) + color.xyz * 0.3, 1.0 );\n\
 }";
 
-void setupCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
-	Capsule::radius = radius;
+void setupCapsule(glm::vec3 posA, glm::vec3 posB) {
 	glGenVertexArrays(1, &capsuleVao);
 	glBindVertexArray(capsuleVao);
 	glGenBuffers(2, capsuleVbo);
@@ -635,7 +632,7 @@ void cleanupCapsule() {
 	glDeleteShader(capsuleShader[1]);
 	glDeleteShader(capsuleShader[2]);
 }
-void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
+void updateCapsule(glm::vec3 posA, glm::vec3 posB) {
 	float vertPos[] = {posA.x, posA.y, posA.z, posB.z, posB.y, posB.z};
 	glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
 	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
@@ -643,7 +640,6 @@ void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
 	buff[3] = posB.x; buff[4] = posB.y; buff[5] = posB.z;
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	Capsule::radius = radius;
 }
 void drawCapsule() {
 	glBindVertexArray(capsuleVao);
@@ -653,7 +649,7 @@ void drawCapsule() {
 	glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
 	glUniform4fv(glGetUniformLocation(capsuleProgram, "camPoint"), 1, &_cameraPoint[0]);
 	glUniform4f(glGetUniformLocation(capsuleProgram, "color"), capsuleColor[0], capsuleColor[1], capsuleColor[2], capsuleColor[3]);
-	glUniform1f(glGetUniformLocation(capsuleProgram, "radius"), Capsule::radius);
+	glUniform1f(glGetUniformLocation(capsuleProgram, "radius"), Capsule::capsuleRadius);
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, 0);
 
 	glUseProgram(0);
@@ -666,16 +662,15 @@ void drawCapsule() {
 namespace LilSpheres {
 GLuint particlesVao;
 GLuint particlesVbo;
-float radius;
 int numparticles;
 extern int maxParticles;
+extern float particlesRadius;
 extern float particlesColor[4];
 
-void setupParticles(int numTotalParticles, float radius) {
+void setupParticles(int numTotalParticles) {
 	assert(numTotalParticles > 0);
 	assert(numTotalParticles <= maxParticles);
 	numparticles = numTotalParticles;
-	LilSpheres::radius = radius;
 	
 	glGenVertexArrays(1, &particlesVao);
 	glBindVertexArray(particlesVao);
@@ -714,7 +709,7 @@ void drawParticles(int startIdx, int count) {
 	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(_modelView));
 	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
 	glUniform4f(glGetUniformLocation(Sphere::sphereProgram, "color"), particlesColor[0], particlesColor[1], particlesColor[2], particlesColor[3]);
-	glUniform1f(glGetUniformLocation(Sphere::sphereProgram, "radius"), LilSpheres::radius);
+	glUniform1f(glGetUniformLocation(Sphere::sphereProgram, "radius"), LilSpheres::particlesRadius);
 	glDrawArrays(GL_POINTS, startIdx, count);
 
 	glUseProgram(0);
