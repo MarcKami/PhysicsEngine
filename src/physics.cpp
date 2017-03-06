@@ -25,9 +25,9 @@ namespace Sphere {
 	extern float spherePos[3] = { 0.f, 1.f, 0.f };
 	extern float sphereRadius = 1.f;
 	extern float sphereColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
-	extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f));
+	extern void setupSphere(float pos[3]);
 	extern void cleanupSphere();
-	extern void updateSphere(glm::vec3 pos);
+	extern void updateSphere(float pos[3]);
 	extern void drawSphere();
 }
 
@@ -36,9 +36,9 @@ namespace Capsule {
 	extern float capsulePosA[3] = { -3.f, 2.f, -2.f }, capsulePosB[3] = { -4.f, 2.f, 2.f };
 	extern float capsuleRadius = 1.f;
 	extern float capsuleColor[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
-	extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f));
+	extern void setupCapsule(float posA[3], float posB[3]);
 	extern void cleanupCapsule();
-	extern void updateCapsule(glm::vec3 posA, glm::vec3 posB);
+	extern void updateCapsule(float posA[3], float posB[3]);
 	extern void drawCapsule();
 }
 
@@ -81,7 +81,9 @@ void GUI() {
 			//Radius
 			ImGui::SliderFloat("Particles Radius", &LilSpheres::particlesRadius, .01f, .25f, "%.3f");
 			//Particles Focus Position
-			ImGui::SliderFloatPos("Focus Position", LilSpheres::particlesFocus, -10.0f, 10.0f);
+			ImGui::SliderFloat("Focus Position X", &LilSpheres::particlesFocus[0], (-5.0f + LilSpheres::particlesRadius), (5.0f - LilSpheres::particlesRadius), "X = %.3f");
+			ImGui::SliderFloat("Focus Position Y", &LilSpheres::particlesFocus[1], (0.0f + LilSpheres::particlesRadius), (10.0f - LilSpheres::particlesRadius), "Y = %.3f");
+			ImGui::SliderFloat("Focus Position Z", &LilSpheres::particlesFocus[2], (-5.0f + LilSpheres::particlesRadius), (5.0f - LilSpheres::particlesRadius), "Z = %.3f");
 			//Particles Lifetime
 			ImGui::SliderFloat("Particles Lifetime", &LilSpheres::lifetime, 1.0f, 5.0f, "seconds = %.3f");
 			//Bounce Coefficient
@@ -103,7 +105,10 @@ void GUI() {
 			//Enable Sphere
 			ImGui::Checkbox("Sphere Enabled", &Sphere::renderSphere);
 			//Position
-			ImGui::SliderFloatPos("Sphere Position", Sphere::spherePos, -10.0f, 10.0f);
+			//ImGui::SliderFloatPos("Sphere Position", Sphere::spherePos, -10.0f, 10.0f);
+			ImGui::SliderFloat("Sphere Position X", &Sphere::spherePos[0], (-5.0f + Sphere::sphereRadius), (5.0f - Sphere::sphereRadius), "X = %.3f");
+			ImGui::SliderFloat("Sphere Position Y", &Sphere::spherePos[1], (0.0f + Sphere::sphereRadius), (10.0f - Sphere::sphereRadius), "Y = %.3f");
+			ImGui::SliderFloat("Sphere Position Z", &Sphere::spherePos[2], (-5.0f + Sphere::sphereRadius), (5.0f - Sphere::sphereRadius), "Z = %.3f");
 			//Radius
 			ImGui::SliderFloat("Sphere Radius", &Sphere::sphereRadius, .1f, 5.0f, "%.3f");
 			//Color
@@ -114,10 +119,20 @@ void GUI() {
 		if (ImGui::CollapsingHeader("Capsule")) {
 			//Enable Capsule
 			ImGui::Checkbox("Capsule Enabled", &Capsule::renderCapsule);
-			//Position point 1
-			ImGui::SliderFloatPos("Position A", Capsule::capsulePosA, -10.0f, 10.0f);
-			//Position point 2
-			ImGui::SliderFloatPos("Position B", Capsule::capsulePosB, -10.0f, 10.0f);
+			//Position point A
+			if (ImGui::CollapsingHeader("Position A")) {
+				//ImGui::SliderFloatPos("Position A", Capsule::capsulePosA, -10.0f, 10.0f);
+				ImGui::SliderFloat("A Capsule Position X", &Capsule::capsulePosA[0], (-5.0f + Capsule::capsuleRadius), (5.0f - Capsule::capsuleRadius), "X = %.3f");
+				ImGui::SliderFloat("A Capsule Position Y", &Capsule::capsulePosA[1], (0.0f + Capsule::capsuleRadius), (10.0f - Capsule::capsuleRadius), "Y = %.3f");
+				ImGui::SliderFloat("A Capsule Position Z", &Capsule::capsulePosA[2], (-5.0f + Capsule::capsuleRadius), (5.0f - Capsule::capsuleRadius), "Z = %.3f");
+			}
+			//Position point B
+			if (ImGui::CollapsingHeader("Position B")) {
+				//ImGui::SliderFloatPos("Position B", Capsule::capsulePosB, -10.0f, 10.0f);
+				ImGui::SliderFloat("B Capsule Position X", &Capsule::capsulePosB[0], (-5.0f + Capsule::capsuleRadius), (5.0f - Capsule::capsuleRadius), "X = %.3f");
+				ImGui::SliderFloat("B Capsule Position Y", &Capsule::capsulePosB[1], (0.0f + Capsule::capsuleRadius), (10.0f - Capsule::capsuleRadius), "Y = %.3f");
+				ImGui::SliderFloat("B Capsule Position Z", &Capsule::capsulePosB[2], (-5.0f + Capsule::capsuleRadius), (5.0f - Capsule::capsuleRadius), "Z = %.3f");
+			}
 			//Radius
 			ImGui::SliderFloat("Capsule Radius", &Capsule::capsuleRadius, .1f, 2.5f, "%.3f");
 			//Color
@@ -129,7 +144,10 @@ void GUI() {
 			//Enable Force Field
 			ImGui::Checkbox("Force Field Enabled", &ForceField::enableForce);
 			//Position
-			ImGui::SliderFloatPos("Force Field Position", ForceField::forceFocus, -10.0f, 10.0f);
+			//ImGui::SliderFloatPos("Force Field Position", ForceField::forceFocus, -10.0f, 10.0f);
+			ImGui::SliderFloat("Force Field Position X", &ForceField::forceFocus[0], -5.0f, 5.0f, "X = %.3f");
+			ImGui::SliderFloat("Force Field Position Y", &ForceField::forceFocus[1], 0.0f, 10.0f, "Y = %.3f");
+			ImGui::SliderFloat("Force Field Position Z", &ForceField::forceFocus[2], -5.0f, 5.0f, "Z = %.3f");
 			//Force
 			ImGui::SliderFloat("Force", &ForceField::force, .1f, 10.0f, "%.3f");
 			//Interaction Type ( Repulsion, Atraction, Pulse)
@@ -152,6 +170,9 @@ void PhysicsInit() {
 	//TODO
 }
 void PhysicsUpdate(float dt) {
+	//Sphere & Capsule Updates
+	Sphere::updateSphere(Sphere::spherePos);
+	Capsule::updateCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
 	//TODO
 }
 void PhysicsCleanup() {

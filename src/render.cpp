@@ -351,6 +351,7 @@ GLuint sphereVao;
 GLuint sphereVbo;
 GLuint sphereShaders[3];
 GLuint sphereProgram;
+extern float spherePos[3];
 extern float sphereRadius;
 extern float sphereColor[4];
 
@@ -434,13 +435,13 @@ void cleanupSphereShaderAndProgram() {
 	shadersCreated = false;
 }
 
-void setupSphere(glm::vec3 pos) {
+void setupSphere(float pos[3]) {
 	glGenVertexArrays(1, &sphereVao);
 	glBindVertexArray(sphereVao);
 	glGenBuffers(1, &sphereVbo);
 
 	glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, &pos, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, pos, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 	glEnableVertexAttribArray(0);
 
@@ -455,12 +456,12 @@ void cleanupSphere() {
 
 	cleanupSphereShaderAndProgram();
 }
-void updateSphere(glm::vec3 pos) {
+void updateSphere(float pos[3]) {
 	glBindBuffer(GL_ARRAY_BUFFER, sphereVbo);
 	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	buff[0] = pos.x;
-	buff[1] = pos.y;
-	buff[2] = pos.z;
+	buff[0] = pos[0];
+	buff[1] = pos[1];
+	buff[2] = pos[2];
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
@@ -485,6 +486,7 @@ GLuint capsuleVao;
 GLuint capsuleVbo[2];
 GLuint capsuleShader[3];
 GLuint capsuleProgram;
+extern float capsulePosA[3], capsulePosB[3];
 extern float capsuleRadius;
 extern float capsuleColor[4];
 
@@ -587,14 +589,14 @@ void main() {\n\
 	out_Color = vec4(color.xyz * dot(normal, (mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)).xyz) + color.xyz * 0.3, 1.0 );\n\
 }";
 
-void setupCapsule(glm::vec3 posA, glm::vec3 posB) {
+void setupCapsule(float posA[3], float posB[3]) {
 	glGenVertexArrays(1, &capsuleVao);
 	glBindVertexArray(capsuleVao);
 	glGenBuffers(2, capsuleVbo);
 
 	float capsuleVerts[] = {
-		posA.x, posA.y, posA.z, 
-		posB.x, posB.y, posB.z
+		posA[0], posA[1], posA[2],
+		posB[0], posB[1], posB[2]
 	};
 	GLubyte capsuleIdx[] = {
 		0, 1
@@ -632,12 +634,12 @@ void cleanupCapsule() {
 	glDeleteShader(capsuleShader[1]);
 	glDeleteShader(capsuleShader[2]);
 }
-void updateCapsule(glm::vec3 posA, glm::vec3 posB) {
-	float vertPos[] = {posA.x, posA.y, posA.z, posB.z, posB.y, posB.z};
+void updateCapsule(float posA[3], float posB[3]) {
+	float vertPos[] = {posA[0], posA[1], posA[2], posB[0], posB[1], posB[2] };
 	glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
 	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
-	buff[0] = posA.x; buff[1] = posA.y; buff[2] = posA.z;
-	buff[3] = posB.x; buff[4] = posB.y; buff[5] = posB.z;
+	buff[0] = posA[0]; buff[1] = posA[1]; buff[2] = posA[2];
+	buff[3] = posB[0]; buff[4] = posB[1]; buff[5] = posB[2];
 	glUnmapBuffer(GL_ARRAY_BUFFER);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

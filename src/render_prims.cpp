@@ -7,19 +7,21 @@
 
 namespace Sphere {
 extern bool renderSphere;
+extern float spherePos[3];
 extern float sphereRadius;
-extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f));
+extern void setupSphere(float pos[3]);
 extern void cleanupSphere();
-extern void updateSphere(glm::vec3 pos);
+extern void updateSphere(float pos[3]);
 extern void drawSphere();
 }
 
 namespace Capsule {
 extern bool renderCapsule;
+extern float capsulePosA[3], capsulePosB[3];
 extern float capsuleRadius;
-extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f));
+extern void setupCapsule(float posA[3], float posB[3]);
 extern void cleanupCapsule();
-extern void updateCapsule(glm::vec3 posA, glm::vec3 posB);
+extern void updateCapsule(float posA[3], float posB[3]);
 extern void drawCapsule();
 }
 
@@ -34,8 +36,8 @@ extern void drawParticles(int startIdx, int count);
 }
 
 void setupPrims() {
-	Sphere::setupSphere();
-	Capsule::setupCapsule();
+	Sphere::setupSphere(Sphere::spherePos);
+	Capsule::setupCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
 
 	//TODO
 	//You define how many particles will be in the simulation (maxParticles number in render.cpp is defined to SHRT_MAX, 
