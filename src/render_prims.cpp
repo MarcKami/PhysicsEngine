@@ -4,24 +4,28 @@
 #include <cstdio>
 
 //Boolean variables allow to show/hide the primitives
-bool renderSphere = true;
-bool renderCapsule = true;
-bool renderParticles = true;
 
 namespace Sphere {
+extern bool renderSphere;
+extern float sphereRadius;
 extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f), float radius = 1.f);
 extern void cleanupSphere();
 extern void updateSphere(glm::vec3 pos, float radius = 1.f);
 extern void drawSphere();
 }
+
 namespace Capsule {
+extern bool renderCapsule;
+extern float capsuleRadius;
 extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f), float radius = 1.f);
 extern void cleanupCapsule();
 extern void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius = 1.f);
 extern void drawCapsule();
 }
+
 namespace LilSpheres {
-extern const int maxParticles;
+extern bool renderParticles;
+extern int maxParticles;
 extern void setupParticles(int numTotalParticles, float radius = 0.05f);
 extern void cleanupParticles();
 extern void updateParticles(int startIdx, int count, float* array_data);
@@ -61,14 +65,14 @@ void cleanupPrims() {
 }
 
 void renderPrims() {
-	if(renderSphere)
+	if(Sphere::renderSphere)
 		Sphere::drawSphere();
-	if(renderCapsule)
+	if(Capsule::renderCapsule)
 		Capsule::drawCapsule();
 
 	//TODO drawParticles can only draw a contiguous amount of particles in its array from start idx to idx+count
 	//Depending the alive particles that have to be rendered, you may need to do multiple calls for this function
-	if(renderParticles)
+	if(LilSpheres::renderParticles)
 		LilSpheres::drawParticles(0, LilSpheres::maxParticles);
 	//
 }

@@ -352,6 +352,7 @@ GLuint sphereVbo;
 GLuint sphereShaders[3];
 GLuint sphereProgram;
 float radius;
+extern float sphereColor[4];
 
 const char* sphere_vertShader =
 "#version 330\n\
@@ -471,7 +472,7 @@ void drawSphere() {
 	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
 	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(_modelView));
 	glUniformMatrix4fv(glGetUniformLocation(sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
-	glUniform4f(glGetUniformLocation(sphereProgram, "color"), 0.6f, 0.1f, 0.1f, 1.f);
+	glUniform4f(glGetUniformLocation(sphereProgram, "color"), sphereColor[0], sphereColor[1], sphereColor[2], sphereColor[3]);
 	glUniform1f(glGetUniformLocation(sphereProgram, "radius"), Sphere::radius);
 	glDrawArrays(GL_POINTS, 0, 1);
 
@@ -487,6 +488,7 @@ GLuint capsuleVbo[2];
 GLuint capsuleShader[3];
 GLuint capsuleProgram;
 float radius;
+extern float capsuleColor[4];
 
 const char* capsule_vertShader =
 "#version 330\n\
@@ -650,7 +652,7 @@ void drawCapsule() {
 	glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(_modelView));
 	glUniformMatrix4fv(glGetUniformLocation(capsuleProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
 	glUniform4fv(glGetUniformLocation(capsuleProgram, "camPoint"), 1, &_cameraPoint[0]);
-	glUniform4f(glGetUniformLocation(capsuleProgram, "color"), 0.1f, 0.6f, 0.1f, 1.f);
+	glUniform4f(glGetUniformLocation(capsuleProgram, "color"), capsuleColor[0], capsuleColor[1], capsuleColor[2], capsuleColor[3]);
 	glUniform1f(glGetUniformLocation(capsuleProgram, "radius"), Capsule::radius);
 	glDrawElements(GL_LINES, 2, GL_UNSIGNED_BYTE, 0);
 
@@ -666,11 +668,12 @@ GLuint particlesVao;
 GLuint particlesVbo;
 float radius;
 int numparticles;
-extern const int maxParticles = 500;
+extern int maxParticles;
+extern float particlesColor[4];
 
 void setupParticles(int numTotalParticles, float radius) {
 	assert(numTotalParticles > 0);
-	assert(numTotalParticles <= 500);
+	assert(numTotalParticles <= maxParticles);
 	numparticles = numTotalParticles;
 	LilSpheres::radius = radius;
 	
@@ -710,7 +713,7 @@ void drawParticles(int startIdx, int count) {
 	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
 	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(_modelView));
 	glUniformMatrix4fv(glGetUniformLocation(Sphere::sphereProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
-	glUniform4f(glGetUniformLocation(Sphere::sphereProgram, "color"), 0.1f, 0.1f, 0.6f, 1.f);
+	glUniform4f(glGetUniformLocation(Sphere::sphereProgram, "color"), particlesColor[0], particlesColor[1], particlesColor[2], particlesColor[3]);
 	glUniform1f(glGetUniformLocation(Sphere::sphereProgram, "radius"), LilSpheres::radius);
 	glDrawArrays(GL_POINTS, startIdx, count);
 

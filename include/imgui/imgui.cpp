@@ -6754,6 +6754,44 @@ bool ImGui::SliderFloatN(const char* label, float* v, int components, float v_mi
     return value_changed;
 }
 
+bool ImGui::SliderFloatM(const char* label, float* v, int components, float v_min, float v_max, const char* display_format1, const char* display_format2, const char* display_format3, float power)
+{
+	ImGuiWindow* window = GetCurrentWindow();
+	if (window->SkipItems)
+		return false;
+
+	ImGuiContext& g = *GImGui;
+	bool value_changed = false;
+	BeginGroup();
+	PushID(label);
+	PushMultiItemsWidths(components);
+
+	PushID(0);
+	value_changed |= SliderFloat("##v", &v[0], v_min, v_max, display_format1, power);
+	SameLine(0, g.Style.ItemInnerSpacing.x);
+	PopID();
+	PopItemWidth();
+
+	PushID(1);
+	value_changed |= SliderFloat("##v", &v[1], v_min, v_max, display_format2, power);
+	SameLine(0, g.Style.ItemInnerSpacing.x);
+	PopID();
+	PopItemWidth();
+
+	PushID(2);
+	value_changed |= SliderFloat("##v", &v[2], v_min, v_max, display_format3, power);
+	SameLine(0, g.Style.ItemInnerSpacing.x);
+	PopID();
+	PopItemWidth();
+
+	PopID();
+
+	TextUnformatted(label, FindRenderedTextEnd(label));
+	EndGroup();
+
+	return value_changed;
+}
+
 bool ImGui::SliderFloat2(const char* label, float v[2], float v_min, float v_max, const char* display_format, float power)
 {
     return SliderFloatN(label, v, 2, v_min, v_max, display_format, power);
@@ -6762,6 +6800,11 @@ bool ImGui::SliderFloat2(const char* label, float v[2], float v_min, float v_max
 bool ImGui::SliderFloat3(const char* label, float v[3], float v_min, float v_max, const char* display_format, float power)
 {
     return SliderFloatN(label, v, 3, v_min, v_max, display_format, power);
+}
+
+bool ImGui::SliderFloatPos(const char* label, float v[3], float v_min, float v_max, const char* display_format1, const char* display_format2, const char* display_format3, float power)
+{
+	return SliderFloatM(label, v, 3, v_min, v_max, display_format1, display_format2, display_format3, power);
 }
 
 bool ImGui::SliderFloat4(const char* label, float v[4], float v_min, float v_max, const char* display_format, float power)

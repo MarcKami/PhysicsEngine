@@ -680,6 +680,7 @@ void ImGui::ShowTestWindow(bool* p_open)
             ImGui::InputFloat3("input float3", vec4f);
             ImGui::DragFloat3("drag float3", vec4f, 0.01f, 0.0f, 1.0f);
             ImGui::SliderFloat3("slider float3", vec4f, 0.0f, 1.0f);
+			ImGui::SliderFloatPos("slider float Pos", vec4f, 0.0f, 1.0f);
             ImGui::DragInt3("drag int3", vec4i, 1, 0, 255);
             ImGui::InputInt3("input int3", vec4i);
             ImGui::SliderInt3("slider int3", vec4i, 0, 255);
