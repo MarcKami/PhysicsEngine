@@ -45,12 +45,14 @@ namespace Capsule {
 namespace LilSpheres {
 	extern bool renderParticles = true;
 	extern int maxParticles = 1000;
+	float *partPos = new float[LilSpheres::maxParticles * 3];
+	float *partVel = new float[LilSpheres::maxParticles * 3];
 	extern float particlesRadius = .05f;
 	extern float lifetime = 3.f;
 	extern float bounceCoeficient = .0f, frictionCoeficient = .0f;
 	extern int solver = 0; //0 Euler - 1 Verlet
 	extern int form = 0; //0 Cascade - 1 Fountain
-	extern float particlesFocus[3] = { .0f, .0f, .0f };
+	extern float particlesFocus[3] = { 0.0f, 5.0f, 0.0f };
 	extern float particlesColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 	extern void setupParticles(int numTotalParticles);
 	extern void cleanupParticles();
@@ -167,14 +169,39 @@ void GUI() {
 }
 
 void PhysicsInit() {
-	//TODO
+	//Init Particles
+	for (int i = 0; i < LilSpheres::maxParticles; ++i) { 
+		//init Positions
+		LilSpheres::partPos[i * 3 + 0] = LilSpheres::particlesFocus[0];
+		LilSpheres::partPos[i * 3 + 1] = LilSpheres::particlesFocus[1];
+		LilSpheres::partPos[i * 3 + 2] = LilSpheres::particlesFocus[2];
+		//Init Velocities
+		if (LilSpheres::form == 0) { //Cascade
+			LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 3.0f;
+			LilSpheres::partVel[i * 3 + 1] = -5.0f;
+			LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 3.0f;
+		}
+		else if (LilSpheres::form == 1) { //Font
+			LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 3.0f;
+			LilSpheres::partVel[i * 3 + 1] = 5.00f;
+			LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 3.0f;
+		}
+	}
+	LilSpheres::updateParticles(0, LilSpheres::maxParticles, LilSpheres::partPos);
+
 }
+
 void PhysicsUpdate(float dt) {
 	//Sphere & Capsule Updates
 	Sphere::updateSphere(Sphere::spherePos);
 	Capsule::updateCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
 	//TODO
+	LilSpheres::updateParticles(0, LilSpheres::maxParticles, LilSpheres::partPos);
 }
+
+
+
 void PhysicsCleanup() {
 	//TODO
+	delete[] LilSpheres::partPos;
 }
