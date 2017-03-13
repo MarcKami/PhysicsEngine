@@ -57,7 +57,7 @@ namespace LilSpheres {
 	extern float lifetime = 3.f;
 	extern float bounceCoeficient = .0f, frictionCoeficient = .0f;
 	extern int solver = 0; //0 Euler - 1 Verlet
-	extern int form = 0; //0 Cascade - 1 Fountain
+	extern int form = 1; //0 Cascade - 1 Fountain
 	extern float particlesFocus[3] = { 0.0f, 5.0f, 0.0f };
 	extern float particlesColor[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 	extern void eulerSolver(float dt);
@@ -191,6 +191,9 @@ void LilSpheres::eulerSolver(float dt) {
 void LilSpheres::verletSolver(float dt) { // TO REPAIR
 	float *tempPos = LilSpheres::partPos;
 
+	LilSpheres::last += 3;
+	if (LilSpheres::last >= LilSpheres::maxParticles) LilSpheres::last -= LilSpheres::maxParticles; //reset the pointer last to 0
+
 	if (LilSpheres::last >= LilSpheres::first) {
 		for (int i = LilSpheres::first; i < LilSpheres::last; ++i) { //pointer last over first
 			//Calc Velocities
@@ -201,6 +204,27 @@ void LilSpheres::verletSolver(float dt) { // TO REPAIR
 			LilSpheres::partPos[i * 3 + 0] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + 0 * (dt*dt);
 			LilSpheres::partPos[i * 3 + 1] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + gravity * (dt*dt);
 			LilSpheres::partPos[i * 3 + 2] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + 0 * (dt*dt);
+			//LifeTime calc
+			LilSpheres::partLife[i] += dt;
+			if (LilSpheres::partLife[i] >= LilSpheres::lifetime) { //reset the particle to initial pos
+				LilSpheres::tempFirst++;
+				//init Positions
+				LilSpheres::partPos[i * 3 + 0] = LilSpheres::particlesFocus[0];
+				LilSpheres::partPos[i * 3 + 1] = LilSpheres::particlesFocus[1];
+				LilSpheres::partPos[i * 3 + 2] = LilSpheres::particlesFocus[2];
+				//Init Velocities
+				if (LilSpheres::form == 0) { //Cascade
+					LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 1] = -5.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+				}
+				else if (LilSpheres::form == 1) { //Font
+					LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 1] = 7.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+				}
+				LilSpheres::partLife[i] = 0;
+			}
 		}
 	}
 	else if (LilSpheres::last < LilSpheres::first){ //pointer last is under first
@@ -213,6 +237,26 @@ void LilSpheres::verletSolver(float dt) { // TO REPAIR
 			LilSpheres::partPos[i * 3 + 0] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + 0 * (dt*dt);
 			LilSpheres::partPos[i * 3 + 1] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + gravity * (dt*dt);
 			LilSpheres::partPos[i * 3 + 2] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + 0 * (dt*dt);
+			LilSpheres::partLife[i] += dt;
+			if (LilSpheres::partLife[i] >= LilSpheres::lifetime) { //reset the particle to initial pos
+				LilSpheres::tempFirst++;
+				//init Positions
+				LilSpheres::partPos[i * 3 + 0] = LilSpheres::particlesFocus[0];
+				LilSpheres::partPos[i * 3 + 1] = LilSpheres::particlesFocus[1];
+				LilSpheres::partPos[i * 3 + 2] = LilSpheres::particlesFocus[2];
+				//Init Velocities
+				if (LilSpheres::form == 0) { //Cascade
+					LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 1] = -5.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+				}
+				else if (LilSpheres::form == 1) { //Font
+					LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 1] = 7.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+				}
+				LilSpheres::partLife[i] = 0;
+			}
 		}
 		for (int i = 0; i < LilSpheres::last; ++i) {
 			//Calc Velocities
@@ -223,8 +267,31 @@ void LilSpheres::verletSolver(float dt) { // TO REPAIR
 			LilSpheres::partPos[i * 3 + 0] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + 0 * (dt*dt);
 			LilSpheres::partPos[i * 3 + 1] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + gravity * (dt*dt);
 			LilSpheres::partPos[i * 3 + 2] += (LilSpheres::partPos[i * 3 + 0] - LilSpheres::partLastPos[i * 3 + 0]) + 0 * (dt*dt);
+			LilSpheres::partLife[i] += dt;
+			if (LilSpheres::partLife[i] >= LilSpheres::lifetime) { //reset the particle to initial pos
+				LilSpheres::tempFirst++;
+				//init Positions
+				LilSpheres::partPos[i * 3 + 0] = LilSpheres::particlesFocus[0];
+				LilSpheres::partPos[i * 3 + 1] = LilSpheres::particlesFocus[1];
+				LilSpheres::partPos[i * 3 + 2] = LilSpheres::particlesFocus[2];
+				//Init Velocities
+				if (LilSpheres::form == 0) { //Cascade
+					LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 1] = -5.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+				}
+				else if (LilSpheres::form == 1) { //Font
+					LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 1] = 7.0f * LilSpheres::vel;
+					LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
+				}
+				LilSpheres::partLife[i] = 0;
+			}
 		}
 	}
+
+	if (LilSpheres::tempFirst >= LilSpheres::maxParticles) LilSpheres::tempFirst -= LilSpheres::maxParticles; //reset the pointer tempFirst to 0
+	LilSpheres::first = LilSpheres::tempFirst; //asign first value
 
 	LilSpheres::partLastPos = tempPos;
 }
