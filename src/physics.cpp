@@ -32,7 +32,7 @@ namespace Sphere {
 }
 
 namespace Capsule {
-	extern bool renderCapsule = true;
+	extern bool renderCapsule = false;
 	extern float capsulePosA[3] = { -3.f, 2.f, -2.f }, capsulePosB[3] = { -4.f, 2.f, 2.f };
 	extern float capsuleRadius = 1.f;
 	extern float capsuleColor[4] = { 0.0f, 1.0f, 0.0f, 1.0f };
@@ -43,7 +43,7 @@ namespace Capsule {
 }
 
 namespace LilSpheres {
-	extern bool renderParticles = true;
+	extern bool renderParticles = false;
 	extern int maxParticles = 1000;
 	float *partPos = new float[LilSpheres::maxParticles * 3];
 	float *partLastPos = new float[LilSpheres::maxParticles * 3];
@@ -75,6 +75,16 @@ namespace ForceField {
 	extern float forceRadius = 1.0f;
 
 	extern int type = 0; //0 Repulsor - 1 Attractor - 2 PulseRepulse
+}
+
+namespace ClothMesh {
+	extern bool renderCloth = true;
+	extern const int numCols;
+	extern const int numRows;
+	extern const int numVerts;
+	float *clothVert = new float[ClothMesh::numVerts * 3];
+	extern void updateClothMesh(float* array_data);
+	void setVertexClothMesh(float x, float y, float z);
 }
 
 void LilSpheres::eulerSolver(float dt) {
@@ -186,6 +196,7 @@ void LilSpheres::eulerSolver(float dt) {
 
 	if (LilSpheres::tempFirst >= LilSpheres::maxParticles) LilSpheres::tempFirst -= LilSpheres::maxParticles; //reset the pointer tempFirst to 0
 	LilSpheres::first = LilSpheres::tempFirst; //asign first value
+
 }
 
 void LilSpheres::verletSolver(float dt) { // TO REPAIR
@@ -296,6 +307,25 @@ void LilSpheres::verletSolver(float dt) { // TO REPAIR
 	LilSpheres::partLastPos = tempPos;
 }
 
+void ClothMesh::setVertexClothMesh(float x, float y, float z) {
+	float tempX = x, tempY = y, tempZ = z;
+
+	ClothMesh::clothVert[0 * 3 + 0] = tempX; //X
+	ClothMesh::clothVert[0 * 3 + 1] = tempY; //Y
+	ClothMesh::clothVert[0 * 3 + 2] = tempZ; //Z
+
+	for (int i = 1; i < numVerts; i++) {
+		tempX += 0.5f;
+		if (i % 14 == 0) {
+			tempX = x;
+			tempZ += 0.5f;
+		}
+		ClothMesh::clothVert[i * 3 + 0] = tempX; //X
+		ClothMesh::clothVert[i * 3 + 1] = tempY; //Y
+		ClothMesh::clothVert[i * 3 + 2] = tempZ; //Z
+		
+	}
+}
 
 void GUI() {
 	{	//FrameRate
@@ -425,6 +455,10 @@ void PhysicsInit() {
 	LilSpheres::partLastPos = LilSpheres::partPos;
 	//Update Particles
 	LilSpheres::updateParticles(0, LilSpheres::maxParticles, LilSpheres::partPos);
+
+	ClothMesh::setVertexClothMesh(-2.5f, 7.0f, -5.0f);
+	ClothMesh::updateClothMesh(ClothMesh::clothVert);
+
 
 }
 

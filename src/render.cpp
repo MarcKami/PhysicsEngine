@@ -718,3 +718,101 @@ void drawParticles(int startIdx, int count) {
 	glBindVertexArray(0);
 }
 }
+
+
+//////////////////////////////////////////////////CLOTH
+namespace ClothMesh {
+	GLuint clothVao;
+	GLuint clothVbo[2];
+	GLuint clothShaders[2];
+	GLuint clothProgram;
+	extern const int numCols = 14;
+	extern const int numRows = 18;
+	extern const int numVerts = numRows * numCols;
+	int numVirtualVerts;
+
+	const char* cloth_vertShader =
+		"#version 330\n\
+in vec3 in_Position;\n\
+uniform mat4 mvpMat;\n\
+void main() {\n\
+	gl_Position = mvpMat * vec4(in_Position, 1.0);\n\
+}";
+	const char* cloth_fragShader =
+		"#version 330\n\
+uniform vec4 color;\n\
+out vec4 out_Color;\n\
+void main() {\n\
+	out_Color = color;\n\
+}";
+
+	void setupClothMesh() {
+		glGenVertexArrays(1, &clothVao);
+		glBindVertexArray(clothVao);
+		glGenBuffers(2, clothVbo);
+
+		glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * numVerts, 0, GL_DYNAMIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glPrimitiveRestartIndex(UCHAR_MAX);
+		constexpr int facesVertsIdx = 5 * (numCols - 1) * (numRows - 1);
+		GLubyte facesIdx[facesVertsIdx] = { 0 };
+		for (int i = 0; i < (numRows - 1); ++i) {
+			for (int j = 0; j < (numCols - 1); ++j) {
+				facesIdx[5 * (i*(numCols - 1) + j) + 0] = i*numCols + j;
+				facesIdx[5 * (i*(numCols - 1) + j) + 1] = (i + 1)*numCols + j;
+				facesIdx[5 * (i*(numCols - 1) + j) + 2] = (i + 1)*numCols + (j + 1);
+				facesIdx[5 * (i*(numCols - 1) + j) + 3] = i*numCols + (j + 1);
+				facesIdx[5 * (i*(numCols - 1) + j) + 4] = UCHAR_MAX;
+			}
+		}
+		numVirtualVerts = facesVertsIdx;
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, clothVbo[1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte)*numVirtualVerts, facesIdx, GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		clothShaders[0] = compileShader(cloth_vertShader, GL_VERTEX_SHADER, "clothVert");
+		clothShaders[1] = compileShader(cloth_fragShader, GL_FRAGMENT_SHADER, "clothFrag");
+
+		clothProgram = glCreateProgram();
+		glAttachShader(clothProgram, clothShaders[0]);
+		glAttachShader(clothProgram, clothShaders[1]);
+		glBindAttribLocation(clothProgram, 0, "in_Position");
+		linkProgram(clothProgram);
+	}
+	void cleanupClothMesh() {
+		glDeleteBuffers(2, clothVbo);
+		glDeleteVertexArrays(1, &clothVao);
+
+		glDeleteProgram(clothProgram);
+		glDeleteShader(clothShaders[0]);
+		glDeleteShader(clothShaders[1]);
+	}
+	void updateClothMesh(float *array_data) {
+		glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
+		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		for (int i = 0; i < 3 * numVerts; ++i) {
+			buff[i] = array_data[i];
+		}
+		glUnmapBuffer(GL_ARRAY_BUFFER);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+	void drawClothMesh() {
+		glEnable(GL_PRIMITIVE_RESTART);
+		glBindVertexArray(clothVao);
+		glUseProgram(clothProgram);
+		glUniformMatrix4fv(glGetUniformLocation(clothProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
+		glUniform4f(glGetUniformLocation(clothProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
+		glDrawElements(GL_LINE_LOOP, numVirtualVerts, GL_UNSIGNED_BYTE, 0);
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+		glDisable(GL_PRIMITIVE_RESTART);
+	}
+}

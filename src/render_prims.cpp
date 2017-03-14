@@ -36,6 +36,17 @@ extern void updateParticles(int startIdx, int count, float* array_data);
 extern void drawParticles(int startIdx, int count);
 }
 
+namespace ClothMesh {
+	extern bool renderCloth;
+	extern const int numCols;
+	extern const int numRows;
+	extern const int numVerts;
+	extern void setupClothMesh();
+	extern void cleanupClothMesh();
+	extern void updateClothMesh(float* array_data);
+	extern void drawClothMesh();
+}
+
 void setupPrims() {
 	Sphere::setupSphere(Sphere::spherePos);
 	Capsule::setupCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
@@ -48,11 +59,13 @@ void setupPrims() {
 	LilSpheres::setupParticles(LilSpheres::maxParticles);
 	//
 	//
+	ClothMesh::setupClothMesh();
 }
 void cleanupPrims() {
 	Sphere::cleanupSphere();
 	Capsule::cleanupCapsule();
 	LilSpheres::cleanupParticles();
+	ClothMesh::cleanupClothMesh();
 }
 
 void renderPrims() {
@@ -66,4 +79,6 @@ void renderPrims() {
 	if(LilSpheres::renderParticles)
 		LilSpheres::drawParticles(0, LilSpheres::maxParticles);
 	//
+	if (ClothMesh::renderCloth)
+		ClothMesh::drawClothMesh();
 }
