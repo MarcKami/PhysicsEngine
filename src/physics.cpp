@@ -7,6 +7,8 @@
 
 bool show_test_window = false;
 
+
+
 static void ShowHelpMarker(const char* desc)
 {
 	ImGui::TextDisabled("(?)");
@@ -82,10 +84,14 @@ namespace ClothMesh {
 	extern const int numCols;
 	extern const int numRows;
 	extern const int numVerts;
-	float *clothVert = new float[ClothMesh::numVerts * 3];
-	extern void updateClothMesh(float* array_data);
+	glm::vec3 *meshVertPos = new glm::vec3[numVerts];
+	glm::vec3 *meshVertPosLast = new glm::vec3[numVerts];
+	extern void updateClothMesh(glm::vec3* array_data);
 	void setVertexClothMesh(float x, float y, float z);
+	void verletSolver(float dt);
 }
+
+using namespace ClothMesh;
 
 void LilSpheres::eulerSolver(float dt) {
 
@@ -310,9 +316,9 @@ void LilSpheres::verletSolver(float dt) { // TO REPAIR
 void ClothMesh::setVertexClothMesh(float x, float y, float z) {
 	float tempX = x, tempY = y, tempZ = z;
 
-	ClothMesh::clothVert[0 * 3 + 0] = tempX; //X
-	ClothMesh::clothVert[0 * 3 + 1] = tempY; //Y
-	ClothMesh::clothVert[0 * 3 + 2] = tempZ; //Z
+	meshVertPos[0].x = tempX; //X
+	meshVertPos[0].y = tempY; //Y
+	meshVertPos[0].z = tempZ; //Z
 
 	for (int i = 1; i < numVerts; i++) {
 		tempX += 0.5f;
@@ -320,11 +326,20 @@ void ClothMesh::setVertexClothMesh(float x, float y, float z) {
 			tempX = x;
 			tempZ += 0.5f;
 		}
-		ClothMesh::clothVert[i * 3 + 0] = tempX; //X
-		ClothMesh::clothVert[i * 3 + 1] = tempY; //Y
-		ClothMesh::clothVert[i * 3 + 2] = tempZ; //Z
+		meshVertPos[i].x = tempX; //X
+		meshVertPos[i].y = tempY; //Y
+		meshVertPos[i].z = tempZ; //Z
 		
 	}
+}
+
+void ClothMesh::verletSolver(float dt) {
+	glm::vec3 *meshVertNext = new glm::vec3[numVerts];
+
+	for (int i = 0; i < numVerts; i++) {
+		meshVertNext = meshVertPos + (meshVertPos - meshVertPosLast) + f * (dt*dt);
+	}
+
 }
 
 void GUI() {
@@ -457,7 +472,8 @@ void PhysicsInit() {
 	LilSpheres::updateParticles(0, LilSpheres::maxParticles, LilSpheres::partPos);
 
 	ClothMesh::setVertexClothMesh(-2.5f, 7.0f, -5.0f);
-	ClothMesh::updateClothMesh(ClothMesh::clothVert);
+	meshVertPosLast = meshVertPos;
+	ClothMesh::updateClothMesh(meshVertPos);
 
 
 }
@@ -466,12 +482,10 @@ void PhysicsUpdate(float dt) {
 	//Sphere & Capsule Updates
 	Sphere::updateSphere(Sphere::spherePos);
 	Capsule::updateCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
-	//Particles
-
-	if (LilSpheres::solver == 0) LilSpheres::eulerSolver(dt);
-	if (LilSpheres::solver == 1) LilSpheres::verletSolver(dt);
-
-	LilSpheres::updateParticles(0, LilSpheres::maxParticles, LilSpheres::partPos);
+	//Mesh
+	ClothMesh::verletSolver(dt);
+	ClothMesh::updateClothMesh(meshVertPos);
+	
 }
 
 

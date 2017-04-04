@@ -794,9 +794,9 @@ void main() {\n\
 		glDeleteShader(clothShaders[0]);
 		glDeleteShader(clothShaders[1]);
 	}
-	void updateClothMesh(float *array_data) {
+	void updateClothMesh(glm::vec3 *array_data) {
 		glBindBuffer(GL_ARRAY_BUFFER, clothVbo[0]);
-		float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
+		glm::vec3* buff = (glm::vec3*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 		for (int i = 0; i < 3 * numVerts; ++i) {
 			buff[i] = array_data[i];
 		}
