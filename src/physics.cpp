@@ -22,6 +22,7 @@ static void ShowHelpMarker(const char* desc)
 	}
 }
 
+#if true
 namespace Sphere {
 	extern bool renderSphere = true;
 	extern float spherePos[3] = { 0.f, 1.f, 0.f };
@@ -335,11 +336,23 @@ void ClothMesh::setVertexClothMesh(float x, float y, float z) {
 
 void ClothMesh::verletSolver(float dt) {
 	glm::vec3 *meshVertNext = new glm::vec3[numVerts];
-
+	/*
 	for (int i = 0; i < numVerts; i++) {
 		meshVertNext = meshVertPos + (meshVertPos - meshVertPosLast) + f * (dt*dt);
-	}
+	}*/
 
+}
+#endif // false
+
+namespace Cube {
+	extern bool renderCube = true;
+	extern float cubePos[3] = { 0.f, 3.f, 0.f };
+	extern float cubeRadius = 2.f;
+	extern float cubeColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	extern void setupCube(float pos[3], float radius);
+	extern void cleanupCube();
+	extern void updateCube(float pos[3], float radius);
+	extern void drawCube();
 }
 
 void GUI() {
@@ -347,6 +360,10 @@ void GUI() {
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 		ImGui::Separator();
+
+
+#if false
+
 
 		//Particles
 		if (ImGui::CollapsingHeader("Particles")) {
@@ -432,9 +449,11 @@ void GUI() {
 			//Interaction Type ( Repulsion, Atraction, Pulse)
 			ImGui::RadioButton("Repulsion", &ForceField::type, 0); ImGui::SameLine();
 			ImGui::RadioButton("Attraction", &ForceField::type, 1); ImGui::SameLine();
-			ImGui::RadioButton("Pulse", &ForceField::type, 2);
-
+			ImGui::RadioButton("Pulse", &ForceField::type, 2); 
 		}
+
+#endif // false
+
 
 	}
 
@@ -446,45 +465,12 @@ void GUI() {
 }
 
 void PhysicsInit() {
-	//Init Particles
-	for (int i = 0; i < LilSpheres::maxParticles; ++i) { 
-		//init Positions
-		LilSpheres::partPos[i * 3 + 0] = LilSpheres::particlesFocus[0];
-		LilSpheres::partPos[i * 3 + 1] = LilSpheres::particlesFocus[1];
-		LilSpheres::partPos[i * 3 + 2] = LilSpheres::particlesFocus[2];
-		//init lifetimes
-		LilSpheres::partLife[i] = 0;
-		//Init Velocities
-		if (LilSpheres::form == 0) { //Cascade
-			LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
-			LilSpheres::partVel[i * 3 + 1] = -5.0f * LilSpheres::vel;
-			LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
-		}
-		else if (LilSpheres::form == 1) { //Font
-			LilSpheres::partVel[i * 3 + 0] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
-			LilSpheres::partVel[i * 3 + 1] = 7.0f * LilSpheres::vel;
-			LilSpheres::partVel[i * 3 + 2] = (((float)rand() / RAND_MAX) * 6.0f) - 2.0f * LilSpheres::vel;
-		}
-	}
-	//init Last Positions
-	LilSpheres::partLastPos = LilSpheres::partPos;
-	//Update Particles
-	LilSpheres::updateParticles(0, LilSpheres::maxParticles, LilSpheres::partPos);
-
-	ClothMesh::setVertexClothMesh(-2.5f, 7.0f, -5.0f);
-	meshVertPosLast = meshVertPos;
-	ClothMesh::updateClothMesh(meshVertPos);
 
 
 }
 
 void PhysicsUpdate(float dt) {
-	//Sphere & Capsule Updates
-	Sphere::updateSphere(Sphere::spherePos);
-	Capsule::updateCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
-	//Mesh
-	ClothMesh::verletSolver(dt);
-	ClothMesh::updateClothMesh(meshVertPos);
+	
 	
 }
 
@@ -492,5 +478,4 @@ void PhysicsUpdate(float dt) {
 
 void PhysicsCleanup() {
 	//TODO
-	delete[] LilSpheres::partPos, LilSpheres::partVel, LilSpheres::partLastPos, LilSpheres::partLife;
 }

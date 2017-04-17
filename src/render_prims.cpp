@@ -47,9 +47,21 @@ namespace ClothMesh {
 	extern void drawClothMesh();
 }
 
+namespace Cube {
+	extern bool renderCube;
+	extern float cubePos[3];
+	extern float cubeRadius;
+	extern void setupCube(float pos[3], float radius);
+	extern void cleanupCube();
+	extern void updateCube(float pos[3], float radius);
+	extern void drawCube();
+
+}
+
 void setupPrims() {
 	Sphere::setupSphere(Sphere::spherePos);
 	Capsule::setupCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
+	Cube::setupCube(Cube::cubePos, Cube::cubeRadius);
 
 	//TODO
 	//You define how many particles will be in the simulation (maxParticles number in render.cpp is defined to SHRT_MAX, 
@@ -66,19 +78,17 @@ void cleanupPrims() {
 	Capsule::cleanupCapsule();
 	LilSpheres::cleanupParticles();
 	ClothMesh::cleanupClothMesh();
+	Cube::cleanupCube();
 }
 
 void renderPrims() {
-	if(Sphere::renderSphere)
-		Sphere::drawSphere();
-	if(Capsule::renderCapsule)
-		Capsule::drawCapsule();
+	if(Sphere::renderSphere) Sphere::drawSphere();
+	if(Capsule::renderCapsule) Capsule::drawCapsule();
 
 	//TODO drawParticles can only draw a contiguous amount of particles in its array from start idx to idx+count
 	//Depending the alive particles that have to be rendered, you may need to do multiple calls for this function
-	if(LilSpheres::renderParticles)
-		LilSpheres::drawParticles(0, LilSpheres::maxParticles);
+	if(LilSpheres::renderParticles)	LilSpheres::drawParticles(0, LilSpheres::maxParticles);
 	//
-	if (ClothMesh::renderCloth)
-		ClothMesh::drawClothMesh();
+	if (ClothMesh::renderCloth)	ClothMesh::drawClothMesh();
+	if (Cube::renderCube) Cube::drawCube();
 }

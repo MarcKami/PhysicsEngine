@@ -816,3 +816,113 @@ void main() {\n\
 		glDisable(GL_PRIMITIVE_RESTART);
 	}
 }
+
+
+namespace Cube {
+	GLuint cubeVao;
+	GLuint cubeVbo[2];
+	GLuint cubeShaders[2];
+	GLuint cubeProgram;
+	extern float cubeColor[4];
+	
+	GLubyte cubeIdx[] = {
+		1, 0, 2, 3,
+		3, 0, 7, 4,
+		2, 3, 6, 7,
+		1, 2, 5, 6,
+		0, 1, 4, 5,
+		4, 5, 7, 6,
+	};
+
+	/*
+	GLubyte cubeIdx[] = {
+		3, 2, 0, 1, 
+		0, 1, 5, 4, 
+		1, 2, 6, 5, 
+		2, 3, 7, 6, 
+		3, 0, 4, 7,
+	};
+	*/
+
+	const char* vertShader_xform =
+		"#version 330\n\
+in vec3 in_Position;\n\
+uniform mat4 mvpMat;\n\
+void main() {\n\
+	gl_Position = mvpMat * vec4(in_Position, 1.0);\n\
+}";
+	const char* fragShader_flatColor =
+		"#version 330\n\
+out vec4 out_Color;\n\
+uniform vec4 color;\n\
+void main() {\n\
+	out_Color = color;\n\
+}";
+
+	void setupCube(float pos[3], float radius) {
+		float cubeVerts[] = {
+			pos[0],				pos[1],				pos[2],				// 0 
+			pos[0] + radius,	pos[1],				pos[2],				// 1 
+			pos[0] + radius,	pos[1],				pos[2] + radius,	// 2 
+			pos[0],				pos[1],				pos[2] + radius,	// 3 
+
+			pos[0],				pos[1] - radius,	pos[2],				// 4
+			pos[0] + radius,	pos[1] - radius,	pos[2],				// 5
+			pos[0] + radius,	pos[1] - radius,	pos[2] + radius,	// 6
+			pos[0],				pos[1] - radius,	pos[2] + radius,	// 7
+		};
+
+		glGenVertexArrays(1, &cubeVao);
+		glBindVertexArray(cubeVao);
+		glGenBuffers(2, cubeVbo);
+
+		glBindBuffer(GL_ARRAY_BUFFER, cubeVbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, cubeVerts, GL_STATIC_DRAW);
+		glVertexAttribPointer((GLuint)0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glEnableVertexAttribArray(0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, cubeVbo[1]);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLubyte) * 24, cubeIdx, GL_STATIC_DRAW);
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+		cubeShaders[0] = compileShader(vertShader_xform, GL_VERTEX_SHADER, "cubeVert");
+		cubeShaders[1] = compileShader(fragShader_flatColor, GL_FRAGMENT_SHADER, "cubeFrag");
+
+		cubeProgram = glCreateProgram();
+		glAttachShader(cubeProgram, cubeShaders[0]);
+		glAttachShader(cubeProgram, cubeShaders[1]);
+		glBindAttribLocation(cubeProgram, 0, "in_Position");
+		linkProgram(cubeProgram);
+	}
+	void cleanupCube() {
+		glDeleteBuffers(2, cubeVbo);
+		glDeleteVertexArrays(1, &cubeVao);
+
+		glDeleteProgram(cubeProgram);
+		glDeleteShader(cubeShaders[0]);
+		glDeleteShader(cubeShaders[1]);
+	}
+	void drawCube() {
+		glBindVertexArray(cubeVao);
+		glUseProgram(cubeProgram);
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "projMat"), 1, GL_FALSE, glm::value_ptr(_projection));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), Cube::cubeColor[0], Cube::cubeColor[1], Cube::cubeColor[2], Cube::cubeColor[3]);
+		
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, 0);
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 4));
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 8));
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 12));
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 16));
+		glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, (void*)(sizeof(GLubyte) * 20));
+		
+		
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
+}
