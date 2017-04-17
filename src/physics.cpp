@@ -24,7 +24,7 @@ static void ShowHelpMarker(const char* desc)
 
 #if true
 namespace Sphere {
-	extern bool renderSphere = true;
+	extern bool renderSphere = false;
 	extern float spherePos[3] = { 0.f, 1.f, 0.f };
 	extern float sphereRadius = 1.f;
 	extern float sphereColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };

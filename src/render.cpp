@@ -905,7 +905,8 @@ void main() {\n\
 		glDeleteShader(cubeShaders[0]);
 		glDeleteShader(cubeShaders[1]);
 	}
-	void drawCube() {
+	void drawCube() {
+
 		glBindVertexArray(cubeVao);
 		glUseProgram(cubeProgram);
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(_MVP));
