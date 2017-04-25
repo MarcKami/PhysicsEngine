@@ -133,6 +133,7 @@ xcopy "$(ProjectDir)libs\glfw3.dll" "$(OutDir)" /y /d</Command>
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\physics.cpp" />
     <ClCompile Include="src\render.cpp" />
+    <ClCompile Include="src\render_cube.cpp" />
     <ClCompile Include="src\render_prims.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

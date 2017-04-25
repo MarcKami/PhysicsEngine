@@ -341,23 +341,52 @@ void ClothMesh::verletSolver(float dt) {
 <<<<<<< Updated upstream
 		meshVertNext = meshVertPos + (meshVertPos - meshVertPosLast) + f * (dt*dt);
 	}*/
-=======
 		//meshVertNext = meshVertPos + (meshVertPos - meshVertPosLast) + f * (dt*dt);
-	}
->>>>>>> Stashed changes
+	
 
 }
 #endif // false
 
 namespace Cube {
 	extern bool renderCube = true;
-	extern float cubePos[3] = { 0.f, 3.f, 0.f };
-	extern float cubeRadius = 2.f;
+	extern float cubePos[3] = { 0.f, 0.f, 0.f };
+	extern float cubeRadius = 0.5f;
 	extern float cubeColor[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+	glm::mat4 newMat = glm::mat4(1.f);
+	extern void eulerSolver(float dt);
 	extern void setupCube(float pos[3], float radius);
 	extern void cleanupCube();
-	extern void updateCube(float pos[3], float radius);
+	extern void updateCube(const glm::mat4& transform);
 	extern void drawCube();
+	float i = 0.0f;
+	glm::mat4 translate = {
+		1.f, 0.f, 0.f, 0.f, //first column
+		0.f, 1.f, 0.f, 0.f, //second column
+		0.f, 0.f, 1.f, 0.f, //third column
+		0.f, 0.f, 0.f, 1.f	//fourth column (transformations)
+	};
+	glm::mat4 rotate = {
+		1.f, 0.f, 0.f, 0.f, //first column  
+		0.f, 1.f, 0.f, 0.f, //second column 
+		0.f, 0.f, 1.f, 0.f, //third column  
+		0.f, 0.f, 0.f, 1.f	//fourth column 
+	};
+}
+
+void Cube::eulerSolver(float dt) {
+	
+	translate[3].y += dt;
+
+	i += dt;
+
+	//Rotation X axis
+	rotate[1].y = glm::cos(i);
+	rotate[1].z = -glm::sin(i);
+	rotate[2].y = glm::sin(i);
+	rotate[2].z = glm::cos(i);
+
+	newMat = translate * rotate;
+
 }
 
 void GUI() {
@@ -470,17 +499,16 @@ void GUI() {
 }
 
 void PhysicsInit() {
-
+	Cube::setupCube(Cube::cubePos, Cube::cubeRadius);
 
 }
 
 void PhysicsUpdate(float dt) {
-	
+	Cube::eulerSolver(dt);
+	Cube::updateCube(Cube::newMat);
 	
 }
 
-
-
 void PhysicsCleanup() {
-	//TODO
+	Cube::cleanupCube();
 }

@@ -16,7 +16,6 @@ GLuint cubeShaders[2];
 GLuint cubeProgram;
 glm::mat4 objMat = glm::mat4(1.f);
 
-extern const float halfW = 0.5f;
 int numVerts = 24 + 6; //4 vertex/face * 6 faces + 6 PRIMITIVE RESTART
 
 
@@ -28,6 +27,8 @@ int numVerts = 24 + 6; //4 vertex/face * 6 faces + 6 PRIMITIVE RESTART
 //| /       | /
 //|/        |/
 //1---------2
+
+/*
 glm::vec3 verts[] = {
 	glm::vec3(-halfW, -halfW, -halfW),
 	glm::vec3(-halfW, -halfW,  halfW),
@@ -62,7 +63,8 @@ glm::vec3 cubeNorms[] = {
 	norms[3], norms[3], norms[3], norms[3],
 	norms[4], norms[4], norms[4], norms[4],
 	norms[5], norms[5], norms[5], norms[5]
-};
+};*/
+
 GLubyte cubeIdx[] = {
 	0, 1, 2, 3, UCHAR_MAX,
 	4, 5, 6, 7, UCHAR_MAX,
@@ -93,7 +95,43 @@ uniform vec4 color;\n\
 void main() {\n\
 	out_Color = vec4(color.xyz * dot(vert_Normal, mv_Mat*vec4(0.0, 1.0, 0.0, 0.0)) + color.xyz * 0.3, 1.0 );\n\
 }";
-void setupCube() {
+void setupCube(float pos[3], float radius) {
+	glm::vec3 verts[] = {
+		glm::vec3(pos[0] - radius, pos[1] - radius, pos[2] - radius),	//0
+		glm::vec3(pos[0] - radius, pos[1] - radius, pos[2] + radius),	//1
+		glm::vec3(pos[0] + radius, pos[1] - radius, pos[2] + radius),	//2
+		glm::vec3(pos[0] + radius, pos[1] - radius, pos[2] - radius),	//3
+		glm::vec3(pos[0] - radius, pos[1] + radius, pos[2] - radius),	//4
+		glm::vec3(pos[0] - radius, pos[1] + radius, pos[2] + radius),	//5
+		glm::vec3(pos[0] + radius, pos[1] + radius, pos[2] + radius),	//6
+		glm::vec3(pos[0] + radius, pos[1] + radius, pos[2] - radius)	//7
+	};
+	glm::vec3 norms[] = {
+		glm::vec3(0.f, -1.f,  0.f),
+		glm::vec3(0.f,  1.f,  0.f),
+		glm::vec3(-1.f,  0.f,  0.f),
+		glm::vec3(1.f,  0.f,  0.f),
+		glm::vec3(0.f,  0.f, -1.f),
+		glm::vec3(0.f,  0.f,  1.f)
+	};
+
+	glm::vec3 cubeVerts[] = {
+		verts[1], verts[0], verts[2], verts[3],
+		verts[5], verts[6], verts[4], verts[7],
+		verts[1], verts[5], verts[0], verts[4],
+		verts[2], verts[3], verts[6], verts[7],
+		verts[0], verts[4], verts[3], verts[7],
+		verts[1], verts[2], verts[5], verts[6]
+	};
+	glm::vec3 cubeNorms[] = {
+		norms[0], norms[0], norms[0], norms[0],
+		norms[1], norms[1], norms[1], norms[1],
+		norms[2], norms[2], norms[2], norms[2],
+		norms[3], norms[3], norms[3], norms[3],
+		norms[4], norms[4], norms[4], norms[4],
+		norms[5], norms[5], norms[5], norms[5]
+	};
+
 	glGenVertexArrays(1, &cubeVao);
 	glBindVertexArray(cubeVao);
 	glGenBuffers(3, cubeVbo);
