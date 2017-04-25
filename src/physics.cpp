@@ -338,8 +338,13 @@ void ClothMesh::verletSolver(float dt) {
 	glm::vec3 *meshVertNext = new glm::vec3[numVerts];
 	/*
 	for (int i = 0; i < numVerts; i++) {
+<<<<<<< Updated upstream
 		meshVertNext = meshVertPos + (meshVertPos - meshVertPosLast) + f * (dt*dt);
 	}*/
+=======
+		//meshVertNext = meshVertPos + (meshVertPos - meshVertPosLast) + f * (dt*dt);
+	}
+>>>>>>> Stashed changes
 
 }
 #endif // false

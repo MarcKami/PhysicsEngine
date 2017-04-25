@@ -4,43 +4,33 @@
 #include <cstdio>
 
 //Boolean variables allow to show/hide the primitives
+bool renderSphere = false;
+bool renderCapsule = false;
+bool renderParticles = false;
+bool renderCloth = false;
+bool renderCube = true;
 
 namespace Sphere {
-extern bool renderSphere;
-extern float spherePos[3];
-extern float sphereRadius;
-extern void setupSphere(float pos[3]);
-extern void cleanupSphere();
-extern void updateSphere(float pos[3]);
-extern void drawSphere();
+	extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f), float radius = 1.f);
+	extern void cleanupSphere();
+	extern void updateSphere(glm::vec3 pos, float radius = 1.f);
+	extern void drawSphere();
 }
-
 namespace Capsule {
-extern bool renderCapsule;
-extern float capsulePosA[3], capsulePosB[3];
-extern float capsuleRadius;
-extern void setupCapsule(float posA[3], float posB[3]);
-extern void cleanupCapsule();
-extern void updateCapsule(float posA[3], float posB[3]);
-extern void drawCapsule();
+	extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f), float radius = 1.f);
+	extern void cleanupCapsule();
+	extern void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius = 1.f);
+	extern void drawCapsule();
 }
-
 namespace LilSpheres {
-extern float particlesFocus[3];
-extern bool renderParticles;
-extern int maxParticles;
-extern float particlesRadius;
-extern void setupParticles(int numTotalParticles);
-extern void cleanupParticles();
-extern void updateParticles(int startIdx, int count, float* array_data);
-extern void drawParticles(int startIdx, int count);
+	extern const int maxParticles;
+	int firstParticleIdx, particleCount;
+	extern void setupParticles(int numTotalParticles, float radius = 0.05f);
+	extern void cleanupParticles();
+	extern void updateParticles(int startIdx, int count, float* array_data);
+	extern void drawParticles(int startIdx, int count);
 }
-
 namespace ClothMesh {
-	extern bool renderCloth;
-	extern const int numCols;
-	extern const int numRows;
-	extern const int numVerts;
 	extern void setupClothMesh();
 	extern void cleanupClothMesh();
 	extern void updateClothMesh(float* array_data);
@@ -48,30 +38,18 @@ namespace ClothMesh {
 }
 
 namespace Cube {
-	extern bool renderCube;
-	extern float cubePos[3];
-	extern float cubeRadius;
-	extern void setupCube(float pos[3], float radius);
+	extern void setupCube();
 	extern void cleanupCube();
-	extern void updateCube(float pos[3], float radius);
+	extern void updateCube(glm::mat4* transform);
 	extern void drawCube();
-
 }
 
 void setupPrims() {
-	Sphere::setupSphere(Sphere::spherePos);
-	Capsule::setupCapsule(Capsule::capsulePosA, Capsule::capsulePosB);
-	Cube::setupCube(Cube::cubePos, Cube::cubeRadius);
-
-	//TODO
-	//You define how many particles will be in the simulation (maxParticles number in render.cpp is defined to SHRT_MAX, 
-	//	you can change it if you want, but be aware of troubled outcomes, 
-	//	like having to create multiple buffers because of interger overflow...)
-	//Link the parameter of setupParticles to the max number of particles in the physics simulation you want to have
+	Sphere::setupSphere();
+	Capsule::setupCapsule();
 	LilSpheres::setupParticles(LilSpheres::maxParticles);
-	//
-	//
 	ClothMesh::setupClothMesh();
+	Cube::setupCube();
 }
 void cleanupPrims() {
 	Sphere::cleanupSphere();
@@ -82,13 +60,24 @@ void cleanupPrims() {
 }
 
 void renderPrims() {
-	if(Sphere::renderSphere) Sphere::drawSphere();
-	if(Capsule::renderCapsule) Capsule::drawCapsule();
+	if (renderSphere)
+		Sphere::drawSphere();
+	if (renderCapsule)
+		Capsule::drawCapsule();
 
-	//TODO drawParticles can only draw a contiguous amount of particles in its array from start idx to idx+count
-	//Depending the alive particles that have to be rendered, you may need to do multiple calls for this function
-	if(LilSpheres::renderParticles)	LilSpheres::drawParticles(0, LilSpheres::maxParticles);
-	//
-	if (ClothMesh::renderCloth)	ClothMesh::drawClothMesh();
-	if (Cube::renderCube) Cube::drawCube();
+	if (renderParticles) {
+		if (LilSpheres::firstParticleIdx + LilSpheres::particleCount < LilSpheres::maxParticles) {
+			LilSpheres::drawParticles(LilSpheres::firstParticleIdx, LilSpheres::particleCount);
+		} else {
+			int rem = LilSpheres::maxParticles - LilSpheres::firstParticleIdx;
+			LilSpheres::drawParticles(LilSpheres::firstParticleIdx, rem);
+			LilSpheres::drawParticles(0, LilSpheres::particleCount - rem);
+		}
+	}
+	
+	if (renderCloth)
+		ClothMesh::drawClothMesh();
+
+	if (renderCube)
+		Cube::drawCube();
 }
