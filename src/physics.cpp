@@ -366,340 +366,266 @@ namespace Cube {
 	extern float cubeVerts[];
 }
 
-namespace Box {
-	extern void setupCube();
-	extern void cleanupCube();
-	extern void drawCube();
-}
-
 class Boxes {
 public:
 
 	class Plane {
 	public:
 		float d;
-		glm::vec3 n;
+		glm::vec3 m;
+
+		//Default Constructor
 		Plane() {
-			d = n.x = n.y = n.z = 0;
+			d = m.x = m.y = m.z = 0;
 		}
-		Plane(float nx, float ny, float nz, float d) {
-			this->n.x = nx;
-			this->n.y = ny;
-			this->n.z = nz;
+
+		//Param Constructor
+		Plane(float mx, float my, float mz, float d) {
+			this->m.x = mx;
+			this->m.y = my;
+			this->m.z = mz;
 			this->d = d;
 		}
-		void SetPlaneStats(float nx, float ny, float nz, float d) {
-			n.x = nx;
-			n.y = ny;
-			n.z = nz;
+
+		//Set Plane Function
+		void SetPlane(float mx, float my, float mz, float d) {
+			m.x = mx;
+			m.y = my;
+			m.z = mz;
 			this->d = d;
 		}
 	};
-	Plane planos[6];
+
+	Plane myPlanes[6];
 
 
-	//Constantes
 	glm::mat3 iBody;
 	float mass;
-	//Variables
+
+	int scale;
 	glm::vec3 orgPos;
 	glm::mat4 prevMod;
+	glm::vec3 beforeVerts[8];
+	glm::vec3 actualVerts[8];
 	glm::vec3 pos;
-	glm::quat quaternion;
-	glm::vec3 linealMom;
-	glm::vec3 angMom;
-	glm::vec3 torque;
+	glm::vec3 linealMomentum;
+	glm::vec3 angularMomentum;
 	glm::mat3 rotation;
-	int escalado;
-	glm::mat3 inverseInertia;
-	glm::vec3 verticesAnteriores[8];
-	glm::vec3 verticesActuales[8];
-	//REINICIO
-	void Restart(float dt) {
+	glm::quat quaternion;
+	glm::vec3 torque;
+	glm::mat3 inverse;
 
-		linealMom = angMom = glm::vec3(0);
+	Boxes(glm::vec3 orgPos, int s) {
+
+		this->orgPos = orgPos;
+		pos = orgPos;
+		scale = s;
+		mass = scale;
+
+		iBody[0][0] = iBody[1][1] = iBody[2][2] = (1.0f / 12.0f)*mass*(scale*scale + scale*scale);
+		myPlanes[0].SetPlane(0.0f, 1.0f, 0.0f, 0.0f); 
+		myPlanes[1].SetPlane(0.0f, 0.0f, -1.0f, -5.0f); 
+		myPlanes[2].SetPlane(-1.0f, 0.0f, 0.0f, 5.0f); 
+		myPlanes[3].SetPlane(0.0f, 0.0f, 1.0f, -5.0f); 
+		myPlanes[4].SetPlane(1.0f, 0.0f, 0.0f, 5.0f);
+		myPlanes[5].SetPlane(0.0f, -1.0f, 0.0f, 10.0f); 
+
+	}
+
+	void Restart(float dt) {
+		srand(time(NULL));
 
 		pos = orgPos;
 
-		srand(time(NULL));
-		glm::vec3 tempForce;
-		tempForce.x = (float)rand() / RAND_MAX * 1000 - 500;
-		tempForce.y = (float)rand() / RAND_MAX * 2000;
-		tempForce.z = (float)rand() / RAND_MAX * 1000 - 500;
-		linealMom = linealMom + ((gravity*mass) + tempForce)*dt;
+		linealMomentum = angularMomentum = glm::vec3(0);
+
+		glm::vec3 force;
+		force.x = (float)rand() / RAND_MAX * 1000 - 500;
+		force.y = (float)rand() / RAND_MAX * 2000;
+		force.z = (float)rand() / RAND_MAX * 1000 - 500;
+		linealMomentum = linealMomentum + (force + (mass * gravity)) * dt;
 
 		glm::vec3 forcePos;
 
-		//(float)rand() / RAND_MAX;
 		forcePos.x = (float)rand() / RAND_MAX * 2 - 1;
 		forcePos.y = (float)rand() / RAND_MAX * 2 - 1;
 		forcePos.z = (float)rand() / RAND_MAX * 2 - 1;
-
-		//std::cout << tempForce.x << " " << tempForce.y << " " << tempForce.z << "\n";
-
-		torque = glm::cross(forcePos - pos, tempForce);
-		angMom = angMom + torque*dt;
+		
+		torque = glm::cross(forcePos - pos, force);
+		angularMomentum = angularMomentum + torque*dt;
 
 		torque = glm::vec3(0);
 	}
+	
+	void Bounce(Plane plane, float dt, glm::vec3 collision) {
+		float relVel;
+		glm::vec3 derPA;
 
-	//CONSTRUCTOR
-	Boxes(glm::vec3 orgPos, int s) {
-		this->orgPos = orgPos;
-		pos = orgPos;
-		escalado = s;
-		mass = escalado;
+		derPA = linealMomentum / mass + glm::cross((inverse * glm::vec3(angularMomentum.x, angularMomentum.y, angularMomentum.z)), glm::vec3(Cube::modelMat*glm::vec4(collision, 1)) - glm::vec3((Cube::modelMat*glm::vec4(0, 0, 0, 1))));
 
-		//iBody es la misma en las tres partes de la matriz porque es un cubo y los lados son iguales
-		iBody[0][0] = iBody[1][1] = iBody[2][2] = (1.0f / 12.0f)*mass*(escalado*escalado + escalado*escalado);
-		planos[0].SetPlaneStats(0.0f, 1.0f, 0.0f, 0.0f); // Parte abajo del cubo
-		planos[1].SetPlaneStats(0.0f, 0.0f, -1.0f, -5.0f); //Parte del fondo
-		planos[2].SetPlaneStats(-1.0f, 0.0f, 0.0f, 5.0f); //Parte izquierda
-		planos[3].SetPlaneStats(0.0f, 0.0f, 1.0f, -5.0f); //Parte de delante
-		planos[4].SetPlaneStats(1.0f, 0.0f, 0.0f, 5.0f); //Parte derechas
-		planos[5].SetPlaneStats(0.0f, -1.0f, 0.0f, 10.0f); //Parte de arriba
-	}
+		relVel = glm::dot(plane.m, derPA);
 
-	//ACTUALIZACIÓN DEL PINTADO
-	void UpdateDraw() {
+		glm::vec3 position = glm::vec3(Cube::modelMat*glm::vec4(collision.x, collision.y, collision.z, 1.0f));
 
+		glm::vec3 var1 = glm::cross(position, plane.m);
+		glm::vec3 var2 = inverse*var1;
+		glm::vec3 var3 = glm::cross(var2, position);
 
-		Cube::modelMat = glm::mat4(1.f);
+		float j = (-(1 + epsilon) * relVel) / (1 / mass + glm::dot(plane.m, var3));
+		glm::vec3 vec = j * plane.m;
+		glm::vec3 torque = glm::cross(position, vec);
 
-		Cube::modelMat = glm::translate(Cube::modelMat, pos);
-
-		prevMod = Cube::modelMat;
-
-
-		glm::mat4 tempRot;
-
-		tempRot = rotation;
-
-		Cube::modelMat *= tempRot;
-
-		Cube::modelMat = glm::scale(Cube::modelMat, glm::vec3(escalado, escalado, escalado));
+		linealMomentum += vec;
+		angularMomentum += torque;
 
 	}
 
-	void Bounce(Plane plano, float dt, glm::vec3 verticeEnContacto) {
-		float velocidadRelativa;
-		glm::vec3 derivadaPA;
-
-		derivadaPA = linealMom / mass + glm::cross((inverseInertia * glm::vec3(angMom.x, angMom.y, angMom.z)), glm::vec3(Cube::modelMat*glm::vec4(verticeEnContacto, 1)) - glm::vec3((Cube::modelMat*glm::vec4(0, 0, 0, 1))));
-
-		velocidadRelativa = glm::dot(plano.n, derivadaPA);
-
-		glm::vec3 posicionDeVertice = glm::vec3(Cube::modelMat*glm::vec4(verticeEnContacto.x, verticeEnContacto.y, verticeEnContacto.z, 1.0f));
-
-		glm::vec3 parentesis1 = glm::cross(posicionDeVertice, plano.n);
-		glm::vec3 parentesis2 = inverseInertia*parentesis1;
-		glm::vec3 parentesis3 = glm::cross(parentesis2, posicionDeVertice);
-
-		float laJota = (-(1 + epsilon)*velocidadRelativa) / (1 / mass + glm::dot(plano.n, parentesis3));
-
-		glm::vec3 vecJota = laJota*plano.n;
-
-		glm::vec3 torqueNuevo = glm::cross(posicionDeVertice, vecJota);
-
-		linealMom += vecJota;
-
-		angMom += torqueNuevo;
-
-	}
-
-	void CheckCol(float dt, glm::vec3 prevVert[], glm::vec3 curVert[]) {
-		for (int j = 0; j < 8; j++) {
-			for (int i = 0; i < 6; i++) {
-
-				if ((glm::dot(planos[i].n, prevVert[j]) + planos[i].d)*(glm::dot(planos[i].n, curVert[j]) + planos[i].d) <= 0) {
-
-					//glm::mat4 temp;
-
-					simulateEulerStep(dt, i, j);
-
-					Bounce(planos[i], dt, curVert[j]);
-
-					//Cube::modelMat = temp;
-
-
+	void Checker(float dt, glm::vec3 prevVert[], glm::vec3 currentVert[]) {
+		for (int j = 0; j < 8; j++) { 
+			for (int i = 0; i < 6; i++) { 
+				if ((glm::dot(myPlanes[i].m, prevVert[j]) + myPlanes[i].d)*(glm::dot(myPlanes[i].m, currentVert[j]) + myPlanes[i].d) <= 0) {
+					EulerSolver(dt, i, j);
+					Bounce(myPlanes[i], dt, currentVert[j]);
 				}
 			}
 		}
 	}
 
-	//ACTUALIZADO
-	void Update(float dt) {
-		
-		UpdatePosAndRot(dt);
-		int contador = 0;
-
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 3; j++) {
-				vert[contador] = Cube::cubeVerts[i * 6 + j];
-				contador++;
-			}
-		}
-
-
-		int contador2 = 0;
-		for (int i = 0; i < 24; i += 3) {
-
-			//			for(int k = 0;k<3;k++){
-			//				for (int j = 0; j < 3; j++){
-			//				std::cout << prevMod[k][j] << " ";
-			//}
-			//				std::cout<<"\n";
-			//			}
-			verticesAnteriores[contador2] = prevMod * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
-			contador2++;
-		}
-
-		contador2 = 0;
-		for (int i = 0; i < 24; i += 3) {
-
-			//std::cout << verticesActuales[i].x << " " << verticesActuales[i].y << " " << verticesActuales[i].z << std::endl;
-
-			verticesActuales[contador2] = Cube::modelMat * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
-			contador2++;
-		}
-
-		//for (int i = 0; i < 24; i++) {
-		//	//std::cout << verticesActuales[i].x << " " << verticesActuales[i].y << " " << verticesActuales[i].z << std::endl;
-
-		//}
-
-		for (int i = 0; i < 8; i++) {
-			if (verticesActuales[i].x > 5) {
-				float offsetX = 5 - verticesActuales[i].x;
-			}
-			else if (verticesActuales[i].x < -5) {
-				float offsetX = -5 + verticesActuales[i].x;
-			}
-
-			if (verticesActuales[i].y > 5) {
-				float offsetY = 5 - verticesActuales[i].y;
-
-			}
-			else if (verticesActuales[i].y < -5) {
-				float offsetY = -5 - verticesActuales[i].y;
-			}
-			if (verticesActuales[i].z > 5) {
-				float offsetZ = 5 - verticesActuales[i].z;
-
-			}
-			else if (verticesActuales[i].z < -5) {
-				float offsetZ = -5 - verticesActuales[i].z;
-
-			}
-		}
-
-
-		CheckCol(dt, verticesAnteriores, verticesActuales);
-
-
-
-		UpdateDraw();
-	}
-
-
-
-	void UpdatePosAndRot(float dt) {
-		linealMom = linealMom + dt*(gravity*mass);
-		angMom = angMom + dt*torque;
-		glm::vec3 velocity = linealMom / mass;
-		pos = pos + velocity*dt;
-		inverseInertia = rotation * glm::inverse(iBody)*glm::transpose(rotation);
-		glm::vec3 angularVelocity = inverseInertia * glm::vec3(angMom.x, angMom.y, angMom.z);
-		//AL DECLARAR MATRICES EN GLM CON EL CONSTRUCTOR, RECIBE LA TRASPOSADA, ES DECIR SI QUIERES PONER UNA MATRIZ DIRECTAMENTE, LA DECLARAS TRASPOSADA
-		glm::mat3 angularMatrix{ 0, angularVelocity.z, -angularVelocity.y,
-			-angularVelocity.z, 0,angularVelocity.x,
-			angularVelocity.y,-angularVelocity.x,0 };
-
-		glm::quat angularSpeed4(0, angularVelocity.x, angularVelocity.y, angularVelocity.z);
-		quaternion = quaternion + (angularSpeed4 * quaternion*0.5f)*dt;
+	void PositionRotation(float dt) {
+		linealMomentum = linealMomentum + dt * (mass * gravity);
+		angularMomentum = angularMomentum + dt * torque;
+		glm::vec3 vel = linealMomentum / mass;
+		pos = pos + vel * dt;
+		inverse = rotation * glm::inverse(iBody) * glm::transpose(rotation);
+		glm::vec3 angularVel = inverse * glm::vec3(angularMomentum.x, angularMomentum.y, angularMomentum.z);
+		glm::mat3 angularMatrix{ 
+			0, angularVel.z, -angularVel.y,
+			-angularVel.z, 0,angularVel.x,
+			angularVel.y,-angularVel.x,0 };
+		glm::quat angularVelQuat(0, angularVel.x, angularVel.y, angularVel.z);
+		quaternion = quaternion + (angularVelQuat * quaternion*0.5f)*dt;
 		quaternion = glm::normalize(quaternion);
 		rotation = glm::mat4_cast(quaternion);
 	}
 
-	void simulateEulerStep(float dt, int planoId, int vertId) {
-		float newDT = dt / 2;
-		float trackDT = dt / 2;
-		glm::vec3 linealMomL;
-		glm::vec3 angMomL;
-		glm::mat3 inverseInertiaL = inverseInertia;
-		glm::quat quaternionL = quaternion;
-		glm::mat4 rotationL = rotation;
-		glm::vec3 posL;
+	void EulerSolver(float dt, int myPlane, int myVert) {
+		float dtTracker = dt / 2;
+		float myDt = dt / 2;
+
+		glm::vec3 posNew;
+		glm::vec3 linealMomentumNew;
+		glm::vec3 angularMomentumNew;
+		glm::mat4 rotationNew = rotation;
+		glm::quat quaternionNew = quaternion;
+		glm::mat3 inverseNew = inverse;
+		
+
 		for (int i = 0; i < 5; i++) {
-			trackDT = trackDT / 2;
-			linealMomL = linealMom;
-			linealMomL = linealMomL + newDT*(gravity*mass);
-			angMomL = angMom + newDT*torque;
-			glm::vec3 velocity = linealMomL / mass;
-			posL = pos + velocity*newDT;
-			inverseInertiaL = rotation * glm::inverse(iBody)*glm::transpose(rotation);
-			glm::vec3 angularVelocity = inverseInertia * glm::vec3(angMom.x, angMom.y, angMom.z);
-			//AL DECLARAR MATRICES EN GLM CON EL CONSTRUCTOR, RECIBE LA TRASPOSADA, ES DECIR SI QUIERES PONER UNA MATRIZ DIRECTAMENTE, LA DECLARAS TRASPOSADA
-			glm::mat3 angularMatrix{ 0, angularVelocity.z, -angularVelocity.y,
-				-angularVelocity.z, 0,angularVelocity.x,
-				angularVelocity.y,-angularVelocity.x,0 };
+			dtTracker = dtTracker / 2;
+			linealMomentumNew = linealMomentum;
+			linealMomentumNew = linealMomentumNew + myDt * (mass * gravity);
+			angularMomentumNew = angularMomentum + myDt * torque;
 
-			glm::quat angularSpeed4(0, angularVelocity.x, angularVelocity.y, angularVelocity.z);
-			quaternionL = quaternion + (angularSpeed4 * quaternion*0.5f)*newDT;
-			quaternionL = glm::normalize(quaternionL);
-			rotationL = glm::mat4_cast(quaternionL);
+			glm::vec3 vel = linealMomentumNew / mass;
+			posNew = pos + vel * myDt;
+			inverseNew = rotation * glm::inverse(iBody) * glm::transpose(rotation);
 
-			glm::vec3 verticeLocal = glm::vec3(vert[vertId * 3], vert[vertId * 3 + 1], vert[vertId * 3 + 2]);
+			glm::vec3 angularVel = inverse * glm::vec3(angularMomentum.x, angularMomentum.y, angularMomentum.z);
+
+			glm::mat3 angularMatrix{ 
+				0, angularVel.z, -angularVel.y,
+				-angularVel.z, 0, angularVel.x,
+				angularVel.y, -angularVel.x, 0 };
+
+			glm::quat angularVelQuat(0, angularVel.x, angularVel.y, angularVel.z);
+			quaternionNew = quaternion + (angularVelQuat * quaternion*0.5f)*myDt;
+			quaternionNew = glm::normalize(quaternionNew);
+			rotationNew = glm::mat4_cast(quaternionNew);
+
+			glm::vec3 localVert = glm::vec3(vert[myVert * 3], vert[myVert * 3 + 1], vert[myVert * 3 + 2]);
 
 			glm::mat4 modelMatL;
-
-			modelMatL = glm::translate(modelMatL, posL);
+			modelMatL = glm::translate(modelMatL, posNew);
 
 			glm::mat4 tempRot;
-
-			tempRot = rotationL;
-
+			tempRot = rotationNew;
 			modelMatL *= tempRot;
+			modelMatL = glm::scale(modelMatL, glm::vec3(scale, scale, scale));
+			localVert = modelMatL * glm::vec4(localVert, 1);
 
-			modelMatL = glm::scale(modelMatL, glm::vec3(escalado, escalado, escalado));
-
-			verticeLocal = modelMatL * glm::vec4(verticeLocal, 1);
-
-			if ((glm::dot(planos[planoId].n, verticesAnteriores[vertId]) + planos[planoId].d)*(glm::dot(planos[planoId].n, verticeLocal) + planos[planoId].d) <= 0) {
-				newDT -= trackDT;
-				//std::cout << "resta\n";
-			}
-			else {
-				newDT += trackDT;
-				//std::cout << "suma\n";
-			}
+			if ((glm::dot(myPlanes[myPlane].m, beforeVerts[myVert]) + myPlanes[myPlane].d)*(glm::dot(myPlanes[myPlane].m, localVert) + myPlanes[myPlane].d) <= 0) myDt -= dtTracker;
+			else myDt += dtTracker;
 		}
 
-		pos = posL;
-		angMom = angMomL;
-		linealMom = linealMomL;
-		quaternion = quaternionL;
-		rotation = rotationL;
-		inverseInertia = inverseInertiaL;
+		pos = posNew;
+		angularMomentum = angularMomentumNew;
+		linealMomentum = linealMomentumNew;
+		quaternion = quaternionNew;
+		rotation = rotationNew;
+		inverse = inverseNew;
 
-		Cube::modelMat = glm::translate(Cube::modelMat, posL);
+		Cube::modelMat = glm::translate(Cube::modelMat, posNew);
 
 		glm::mat4 tempRot;
 
-		tempRot = rotationL;
+		tempRot = rotationNew;
 
 		Cube::modelMat *= tempRot;
 
-		Cube::modelMat = glm::scale(Cube::modelMat, glm::vec3(escalado, escalado, escalado));
-
-
-
-
+		Cube::modelMat = glm::scale(Cube::modelMat, glm::vec3(scale, scale, scale));
 
 		UpdateDraw();
-		//return modelMat;
 	}
 
+	void UpdateDraw() {
+		Cube::modelMat = glm::mat4(1.f);
+		Cube::modelMat = glm::translate(Cube::modelMat, pos);
+		prevMod = Cube::modelMat;
+
+		glm::mat4 tempRot;
+		tempRot = rotation;
+
+		Cube::modelMat *= tempRot;
+		Cube::modelMat = glm::scale(Cube::modelMat, glm::vec3(scale, scale, scale));
+	}
+
+	void Update(float dt) {
+		PositionRotation(dt);
+		int count1 = 0;
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 3; j++) {
+				vert[count1] = Cube::cubeVerts[i * 6 + j];
+				count1++;
+			}
+		}
+
+		int count2 = 0;
+		for (int i = 0; i < 24; i += 3) {
+			beforeVerts[count2] = prevMod * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
+			count2++;
+		}
+		count2 = 0;
+
+		for (int i = 0; i < 24; i += 3) {
+			actualVerts[count2] = Cube::modelMat * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
+			count2++;
+		}
+
+		for (int i = 0; i < 8; i++) {
+			if (actualVerts[i].x > 5) float offsetX = 5 - actualVerts[i].x;
+			else if (actualVerts[i].x < -5) float offsetX = -5 + actualVerts[i].x;
+
+			if (actualVerts[i].y > 5) float offsetY = 5 - actualVerts[i].y;
+			else if (actualVerts[i].y < -5) float offsetY = -5 - actualVerts[i].y;
+
+			if (actualVerts[i].z > 5) float offsetZ = 5 - actualVerts[i].z;
+			else if (actualVerts[i].z < -5) float offsetZ = -5 - actualVerts[i].z;
+		}
+
+		Checker(dt, beforeVerts, actualVerts);
+		UpdateDraw();
+
+	}
 };
 
 Boxes 	myBox = Boxes(glm::vec3(0, 5, 0), 2);
@@ -814,7 +740,6 @@ void GUI() {
 
 void PhysicsInit() {
 	epsilon = 1.f;
-
 }
 
 void PhysicsUpdate(float dt) {
@@ -834,5 +759,4 @@ void PhysicsUpdate(float dt) {
 
 void PhysicsCleanup() {
 	Cube::cleanupCube();
-	Box::cleanupCube();
 }
