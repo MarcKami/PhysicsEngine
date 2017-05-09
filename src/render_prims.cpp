@@ -38,11 +38,8 @@ namespace ClothMesh {
 }
 
 namespace Cube {
-	extern float cubePos[3];
-	extern float cubeRadius;
-	extern void setupCube(float pos[3], float radius);
+	extern void setupCube();
 	extern void cleanupCube();
-	extern void updateCube(glm::mat4* transform);
 	extern void drawCube();
 }
 
@@ -51,8 +48,9 @@ void setupPrims() {
 	Capsule::setupCapsule();
 	LilSpheres::setupParticles(LilSpheres::maxParticles);
 	ClothMesh::setupClothMesh();
-	Cube::setupCube(Cube::cubePos, Cube::cubeRadius);
+	Cube::setupCube();
 }
+
 void cleanupPrims() {
 	Sphere::cleanupSphere();
 	Capsule::cleanupCapsule();
