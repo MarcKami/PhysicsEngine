@@ -829,8 +829,7 @@ namespace Cube {
 	in vec3 _color;\n\
 	out vec4 color;\n\
 	void main() {\n\
-		//color = vec4(1,0,0,1);\n\
-		color = vec4(_color.xyz,1);\n\
+		color = vec4(0,0,0.6,1);\n\
 	}";
 
 	const char* cube_vertShader =
