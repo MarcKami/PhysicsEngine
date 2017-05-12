@@ -14,7 +14,8 @@ bool restart = true;
 
 glm::vec3 gravity = glm::vec3(0, -9.8, 0);
 
-float epsilon;
+float counter = 0.f;
+float epsilon = 1.f;
 float vert[24];
 
 
@@ -416,20 +417,18 @@ public:
 	glm::mat3 inverse;
 
 	Boxes(glm::vec3 orgPos, int s) {
-
 		this->orgPos = orgPos;
 		pos = orgPos;
 		scale = s;
 		mass = scale;
 
-		iBody[0][0] = iBody[1][1] = iBody[2][2] = (1.0f / 12.0f)*mass*(scale*scale + scale*scale);
+		iBody[0][0] = iBody[1][1] = iBody[2][2] = (1.0f / 12.0f) * mass * (scale * scale + scale * scale);
 		myPlanes[0].SetPlane(0.0f, 1.0f, 0.0f, 0.0f); 
 		myPlanes[1].SetPlane(0.0f, 0.0f, -1.0f, -5.0f); 
 		myPlanes[2].SetPlane(-1.0f, 0.0f, 0.0f, 5.0f); 
 		myPlanes[3].SetPlane(0.0f, 0.0f, 1.0f, -5.0f); 
 		myPlanes[4].SetPlane(1.0f, 0.0f, 0.0f, 5.0f);
 		myPlanes[5].SetPlane(0.0f, -1.0f, 0.0f, 10.0f); 
-
 	}
 
 	void Restart(float dt) {
@@ -440,9 +439,9 @@ public:
 		linealMomentum = angularMomentum = glm::vec3(0);
 
 		glm::vec3 force;
-		force.x = (float)rand() / RAND_MAX * 1000 - 500;
-		force.y = (float)rand() / RAND_MAX * 2000;
-		force.z = (float)rand() / RAND_MAX * 1000 - 500;
+		force.x = (float)rand() / RAND_MAX * 750 - 250;
+		force.y = (float)rand() / RAND_MAX * 1500;
+		force.z = (float)rand() / RAND_MAX * 750 - 250;
 		linealMomentum = linealMomentum + (force + (mass * gravity)) * dt;
 
 		glm::vec3 forcePos;
@@ -452,8 +451,7 @@ public:
 		forcePos.z = (float)rand() / RAND_MAX * 2 - 1;
 		
 		torque = glm::cross(forcePos - pos, force);
-		angularMomentum = angularMomentum + torque*dt;
-
+		angularMomentum = angularMomentum + torque * dt;
 		torque = glm::vec3(0);
 	}
 	
@@ -634,8 +632,8 @@ void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::SliderFloat("Elasticity", &epsilon, 0, 1);
+		ImGui::Text("The simulation restarts every 2.5 sec, push the button to force restart.");
 		restart = ImGui::Button("Restart");
-		ImGui::Separator();
 		
 #if false
 
@@ -739,17 +737,18 @@ void GUI() {
 }
 
 void PhysicsInit() {
-	epsilon = 1.f;
 }
 
 void PhysicsUpdate(float dt) {
+	counter += dt;
 	if (!start) {
 		myBox.Restart(dt);
 		start = true;
 	}
-	if (restart) {
+	if (restart || counter >= 2.5f) {
 		restart = false;
 		myBox.Restart(dt);
+		counter = 0.f;
 	}
 
 	myBox.Update(dt);
