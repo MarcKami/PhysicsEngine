@@ -379,15 +379,7 @@ public:
 		Plane() {
 			d = m.x = m.y = m.z = 0;
 		}
-
-		//Param Constructor
-		Plane(float mx, float my, float mz, float d) {
-			this->m.x = mx;
-			this->m.y = my;
-			this->m.z = mz;
-			this->d = d;
-		}
-
+		
 		//Set Plane Function
 		void SetPlane(float mx, float my, float mz, float d) {
 			m.x = mx;
@@ -398,13 +390,10 @@ public:
 	};
 
 	Plane myPlanes[6];
-
-
-	glm::mat3 iBody;
+	glm::mat3 myObj;
 	float mass;
-
 	int scale;
-	glm::vec3 orgPos;
+	glm::vec3 iniPos;
 	glm::mat4 prevMod;
 	glm::vec3 beforeVerts[8];
 	glm::vec3 actualVerts[8];
@@ -416,13 +405,15 @@ public:
 	glm::vec3 torque;
 	glm::mat3 inverse;
 
-	Boxes(glm::vec3 orgPos, int s) {
-		this->orgPos = orgPos;
-		pos = orgPos;
+	//Constructor for the simulated box.
+	Boxes(glm::vec3 position, int s) {
+		this->iniPos = position;
+		pos = position;
 		scale = s;
 		mass = scale;
 
-		iBody[0][0] = iBody[1][1] = iBody[2][2] = (1.0f / 12.0f) * mass * (scale * scale + scale * scale);
+		myObj[0][0] = myObj[1][1] = myObj[2][2] = (1.0f / 12.0f) * mass * (scale * scale + scale * scale);
+
 		myPlanes[0].SetPlane(0.0f, 1.0f, 0.0f, 0.0f); 
 		myPlanes[1].SetPlane(0.0f, 0.0f, -1.0f, -5.0f); 
 		myPlanes[2].SetPlane(-1.0f, 0.0f, 0.0f, 5.0f); 
@@ -431,10 +422,10 @@ public:
 		myPlanes[5].SetPlane(0.0f, -1.0f, 0.0f, 10.0f); 
 	}
 
-	void Restart(float dt) {
+	void Start(float dt) {
 		srand(time(NULL));
 
-		pos = orgPos;
+		pos = iniPos;
 
 		linealMomentum = angularMomentum = glm::vec3(0);
 
@@ -442,7 +433,7 @@ public:
 		force.x = (float)rand() / RAND_MAX * 750 - 250;
 		force.y = (float)rand() / RAND_MAX * 1500;
 		force.z = (float)rand() / RAND_MAX * 750 - 250;
-		linealMomentum = linealMomentum + (force + (mass * gravity)) * dt;
+		linealMomentum += (force + (mass * gravity)) * dt;
 
 		glm::vec3 forcePos;
 
@@ -451,7 +442,7 @@ public:
 		forcePos.z = (float)rand() / RAND_MAX * 2 - 1;
 		
 		torque = glm::cross(forcePos - pos, force);
-		angularMomentum = angularMomentum + torque * dt;
+		angularMomentum += torque * dt;
 		torque = glm::vec3(0);
 	}
 	
@@ -475,14 +466,13 @@ public:
 
 		linealMomentum += vec;
 		angularMomentum += torque;
-
 	}
 
-	void Checker(float dt, glm::vec3 prevVert[], glm::vec3 currentVert[]) {
+	void CheckCol(float dt, glm::vec3 prevVert[], glm::vec3 currentVert[]) {
 		for (int j = 0; j < 8; j++) { 
 			for (int i = 0; i < 6; i++) { 
 				if ((glm::dot(myPlanes[i].m, prevVert[j]) + myPlanes[i].d)*(glm::dot(myPlanes[i].m, currentVert[j]) + myPlanes[i].d) <= 0) {
-					EulerSolver(dt, i, j);
+					EulerSim(dt, i, j);
 					Bounce(myPlanes[i], dt, currentVert[j]);
 				}
 			}
@@ -490,26 +480,25 @@ public:
 	}
 
 	void PositionRotation(float dt) {
-		linealMomentum = linealMomentum + dt * (mass * gravity);
-		angularMomentum = angularMomentum + dt * torque;
+		linealMomentum += dt * (mass * gravity);
+		angularMomentum += dt * torque;
 		glm::vec3 vel = linealMomentum / mass;
-		pos = pos + vel * dt;
-		inverse = rotation * glm::inverse(iBody) * glm::transpose(rotation);
+		pos += vel * dt;
+		inverse = rotation * glm::inverse(myObj) * glm::transpose(rotation);
 		glm::vec3 angularVel = inverse * glm::vec3(angularMomentum.x, angularMomentum.y, angularMomentum.z);
 		glm::mat3 angularMatrix{ 
 			0, angularVel.z, -angularVel.y,
 			-angularVel.z, 0,angularVel.x,
 			angularVel.y,-angularVel.x,0 };
 		glm::quat angularVelQuat(0, angularVel.x, angularVel.y, angularVel.z);
-		quaternion = quaternion + (angularVelQuat * quaternion*0.5f)*dt;
+		quaternion += (angularVelQuat * quaternion * 0.5f) * dt;
 		quaternion = glm::normalize(quaternion);
 		rotation = glm::mat4_cast(quaternion);
 	}
 
-	void EulerSolver(float dt, int myPlane, int myVert) {
+	void EulerSim(float dt, int myPlane, int myVert) {
 		float dtTracker = dt / 2;
 		float myDt = dt / 2;
-
 		glm::vec3 posNew;
 		glm::vec3 linealMomentumNew;
 		glm::vec3 angularMomentumNew;
@@ -517,16 +506,15 @@ public:
 		glm::quat quaternionNew = quaternion;
 		glm::mat3 inverseNew = inverse;
 		
-
 		for (int i = 0; i < 5; i++) {
-			dtTracker = dtTracker / 2;
+			dtTracker /= 2;
 			linealMomentumNew = linealMomentum;
-			linealMomentumNew = linealMomentumNew + myDt * (mass * gravity);
+			linealMomentumNew += myDt * (mass * gravity);
 			angularMomentumNew = angularMomentum + myDt * torque;
 
 			glm::vec3 vel = linealMomentumNew / mass;
 			posNew = pos + vel * myDt;
-			inverseNew = rotation * glm::inverse(iBody) * glm::transpose(rotation);
+			inverseNew = rotation * glm::inverse(myObj) * glm::transpose(rotation);
 
 			glm::vec3 angularVel = inverse * glm::vec3(angularMomentum.x, angularMomentum.y, angularMomentum.z);
 
@@ -575,6 +563,19 @@ public:
 		UpdateDraw();
 	}
 
+	void VertChecker() {
+		int count1 = 0;
+		int count2 = 0;
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 3; j++) vert[count1++] = Cube::cubeVerts[i * 6 + j];
+		}
+
+		for (int i = 0; i < 24; i += 3) beforeVerts[count2++] = prevMod * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
+		
+		count2 = 0;
+		for (int i = 0; i < 24; i += 3) actualVerts[count2++] = Cube::modelMat * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
+	}
+
 	void UpdateDraw() {
 		Cube::modelMat = glm::mat4(1.f);
 		Cube::modelMat = glm::translate(Cube::modelMat, pos);
@@ -586,43 +587,15 @@ public:
 		Cube::modelMat *= tempRot;
 		Cube::modelMat = glm::scale(Cube::modelMat, glm::vec3(scale, scale, scale));
 	}
-
+	
 	void Update(float dt) {
 		PositionRotation(dt);
-		int count1 = 0;
-		for (int i = 0; i < 8; i++) {
-			for (int j = 0; j < 3; j++) {
-				vert[count1] = Cube::cubeVerts[i * 6 + j];
-				count1++;
-			}
-		}
+		
+		VertChecker();
 
-		int count2 = 0;
-		for (int i = 0; i < 24; i += 3) {
-			beforeVerts[count2] = prevMod * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
-			count2++;
-		}
-		count2 = 0;
+		CheckCol(dt, beforeVerts, actualVerts);
 
-		for (int i = 0; i < 24; i += 3) {
-			actualVerts[count2] = Cube::modelMat * (glm::vec4(vert[i], vert[i + 1], vert[i + 2], 1));
-			count2++;
-		}
-
-		for (int i = 0; i < 8; i++) {
-			if (actualVerts[i].x > 5) float offsetX = 5 - actualVerts[i].x;
-			else if (actualVerts[i].x < -5) float offsetX = -5 + actualVerts[i].x;
-
-			if (actualVerts[i].y > 5) float offsetY = 5 - actualVerts[i].y;
-			else if (actualVerts[i].y < -5) float offsetY = -5 - actualVerts[i].y;
-
-			if (actualVerts[i].z > 5) float offsetZ = 5 - actualVerts[i].z;
-			else if (actualVerts[i].z < -5) float offsetZ = -5 - actualVerts[i].z;
-		}
-
-		Checker(dt, beforeVerts, actualVerts);
 		UpdateDraw();
-
 	}
 };
 
@@ -742,12 +715,12 @@ void PhysicsInit() {
 void PhysicsUpdate(float dt) {
 	counter += dt;
 	if (!start) {
-		myBox.Restart(dt);
+		myBox.Start(dt);
 		start = true;
 	}
 	if (restart || counter >= 2.5f) {
 		restart = false;
-		myBox.Restart(dt);
+		myBox.Start(dt);
 		counter = 0.f;
 	}
 
