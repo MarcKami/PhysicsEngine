@@ -4,11 +4,11 @@
 #include <cstdio>
 
 //Boolean variables allow to show/hide the primitives
-bool renderSphere = false;
+bool renderSphere = true;
 bool renderCapsule = false;
 bool renderParticles = false;
-bool renderCloth = false;
-bool renderCube = true;
+bool renderCloth = true;
+bool renderCube = false;
 
 namespace Sphere {
 	extern void setupSphere(glm::vec3 pos = glm::vec3(0.f, 1.f, 0.f), float radius = 1.f);

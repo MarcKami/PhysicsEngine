@@ -1732,7 +1732,7 @@ static int stbtt__GetGlyphShapeTT(const stbtt_fontinfo *info, int glyph_index, s
 typedef struct
 {
    int bounds;
-   int started;
+   int start;
    float first_x, first_y;
    float x, y;
    stbtt_int32 min_x, max_x, min_y, max_y;
@@ -1745,11 +1745,11 @@ typedef struct
 
 static void stbtt__track_vertex(stbtt__csctx *c, stbtt_int32 x, stbtt_int32 y)
 {
-   if (x > c->max_x || !c->started) c->max_x = x;
-   if (y > c->max_y || !c->started) c->max_y = y;
-   if (x < c->min_x || !c->started) c->min_x = x;
-   if (y < c->min_y || !c->started) c->min_y = y;
-   c->started = 1;
+   if (x > c->max_x || !c->start) c->max_x = x;
+   if (y > c->max_y || !c->start) c->max_y = y;
+   if (x < c->min_x || !c->start) c->min_x = x;
+   if (y < c->min_y || !c->start) c->min_y = y;
+   c->start = 1;
 }
 
 static void stbtt__csctx_v(stbtt__csctx *c, stbtt_uint8 type, stbtt_int32 x, stbtt_int32 y, stbtt_int32 cx, stbtt_int32 cy, stbtt_int32 cx1, stbtt_int32 cy1)
