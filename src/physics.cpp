@@ -71,8 +71,12 @@ void GUI() {
 		ImGui::SliderFloat("Frequency Y", &waveFreqZ, 0.1f, 5.0f);
 		ImGui::SliderFloat("Frequency Custom", &waveFreqCustom, 0.1f, 5.0f);
 		ImGui::SliderFloat("Amplitude", &waveAmplitude, 0.05f, 0.4f);
+		ImGui::ProgressBar(counter/20, ImVec2(0.0f, 0.0f));
+		ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+		ImGui::Text("Time to Restart");
 		restart = ImGui::Button("Restart"); ImGui::SameLine();
 		ImGui::Checkbox("Stop", &stop);
+
 	}
 
 	// ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
@@ -126,6 +130,7 @@ void Restart() {
 			arrayPos[j * 14 + i] = (glm::vec3(j*distance.x - 5.f, 3.5, i*distance.z - 5.f));
 		}
 	}
+	counter = 0.f;
 	restart = false;
 }
 
@@ -148,6 +153,7 @@ void arrayMod(float* distance, int* index, int a) {
 
 void PhysicsUpdate(float dt) {
 	if (!stop) {
+		counter += dt;
 		//Waves
 		waveVecX = glm::vec3(0.6f, 0, 0) * waveMulti1;
 		waveVecZ = glm::vec3(0, 0, 0.9) * waveMulti2;
@@ -155,7 +161,7 @@ void PhysicsUpdate(float dt) {
 
 		timer += dt;
 
-		if (restart) Restart();
+		if (restart || counter >= 20.f) Restart();
 
 		//Waves Movements
 		for (int i = 0; i < ClothMesh::numCols * ClothMesh::numRows; i++) {
